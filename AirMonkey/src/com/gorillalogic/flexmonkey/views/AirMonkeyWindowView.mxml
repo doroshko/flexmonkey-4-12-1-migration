@@ -1,0 +1,624 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU General Public License, v2.
+-->
+<s:Window xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+          xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+          xmlns:manageTests="com.gorillalogic.flexmonkey.views.manageTests.*"
+          xmlns:runner="com.gorillalogic.flexmonkey.views.runner.*"
+          xmlns:views="com.gorillalogic.flexmonkey.views.*"
+          width="750"
+          height="775"
+          minHeight="600"
+          minWidth="550"
+          skinClass="com.gorillalogic.flexmonkey.views.skins.WindowSkin"
+          creationComplete="creationCompleteHandler()"
+          initialize="initializeHandler()"
+          windowComplete="windowCompleteHandler()"
+          windowResize="resizeHandler(event)"
+          closing="exitingHandler(event)"
+          showStatusBar="false"
+          title="{ windowTitle }">
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+			import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+			import com.gorillalogic.flexmonkey.events.FMAlertEvent;
+			import com.gorillalogic.flexmonkey.events.FMRunnerEvent;
+			import com.gorillalogic.flexmonkey.events.InteractionEvent;
+			import com.gorillalogic.flexmonkey.events.MonkeyNodeEvent;
+			import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+			import com.gorillalogic.flexmonkey.events.ProjectFilesEvent;
+			import com.gorillalogic.flexmonkey.events.SnapshotEvent;
+			import com.gorillalogic.flexmonkey.events.StatusCheckEvent;
+			import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+			import com.gorillalogic.flexmonkey.monkeyCommands.CallFunctionMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.PauseMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.SetPropertyMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.StoreValueMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.UIEventMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.VerifyGridMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.VerifyPropertyMonkeyCommand;
+			import com.gorillalogic.flexmonkey.views.renderers.TestMonkeyNodeItemRenderer;
+			import com.gorillalogic.flexmonkey.views.skins.MainWindowHelpButtonSkin;
+			import com.gorillalogic.framework.FMHub;
+			
+			import mx.binding.utils.ChangeWatcher;
+			import mx.events.EffectEvent;
+			import mx.events.FlexNativeWindowBoundsEvent;
+			import mx.utils.ObjectUtil;
+
+            private var resizeTimer:Timer;
+
+            private var rootMenu:NativeMenu;
+            private var appMenu:NativeMenu;
+            private var fileMenu:NativeMenu;
+            private var editMenu:NativeMenu;
+            private var projectMenu:NativeMenu;
+            private var windowMenu:NativeMenu;
+            private var helpMenu:NativeMenu;
+
+            [Bindable] private var model:ProjectTestModel = ProjectTestModel.instance;
+            [Bindable] private var windowTitle:String = "FlexMonkey";
+
+            private function initializeHandler():void {
+                ChangeWatcher.watch(model, "projectUrl", projectUrlChanged);
+            }
+
+            private function resizeHandler(event:FlexNativeWindowBoundsEvent):void {
+                if (resizeTimer != null) {
+                    resizeTimer.stop();
+                    resizeTimer = null;
+                }
+
+                resizeOverlay.visible = true;
+                resizeTimer = new Timer(500, 1);
+                resizeTimer.addEventListener(TimerEvent.TIMER, resizeTimerHandler);
+                resizeTimer.start();
+            }
+
+            private function resizeTimerHandler(event:Event):void {
+                var newListWidth:int = this.width - 135;
+                var newListHeight:int = this.height - 20;
+                testHome.listScroller.width = newListWidth;
+                testHome.listScroller.height = newListHeight;
+                resizeOverlay.visible = false;
+            }
+
+            private function projectUrlChanged(event:Event):void {
+                var slashArray:Array = model.projectUrl.split("/");
+                windowTitle = "FlexMonkey ::  ..../" + slashArray[slashArray.length - 2] + "/" + slashArray[slashArray.length - 1];
+            }
+
+            private function creationCompleteHandler():void {
+                //setup new code
+                addWindowEventHandlers();
+
+                //notify that window is ready
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.WINDOW_LOADED));
+            }
+
+            //
+            // add menus
+            //
+
+            private function windowCompleteHandler():void {
+                this.nativeWindow.x = 100;
+                this.nativeWindow.y = 100;
+                // menus ----------------------------------------------------------------
+
+                NativeApplication.nativeApplication.addEventListener(Event.EXITING, exitingHandler, false, 0, true);
+
+                if (NativeApplication.supportsMenu) {
+                    rootMenu = NativeApplication.nativeApplication.menu;
+
+                    appMenu = rootMenu.getItemAt(0).submenu;
+                    fileMenu = rootMenu.getItemAt(1).submenu;
+                    editMenu = rootMenu.getItemAt(2).submenu;
+                    windowMenu = rootMenu.getItemAt(3).submenu;
+                    projectMenu = new NativeMenu();
+                    rootMenu.addSubmenuAt(projectMenu, 3, "Project");
+                } else {
+                    rootMenu = new NativeMenu();
+                    this.nativeWindow.menu = rootMenu;
+
+                    fileMenu = new NativeMenu();
+                    rootMenu.addSubmenu(fileMenu, "File");
+                    editMenu = new NativeMenu();
+                    rootMenu.addSubmenu(editMenu, "Edit");
+                    projectMenu = new NativeMenu();
+                    rootMenu.addSubmenu(projectMenu, "Project");
+
+                    if (Capabilities.os.toUpperCase().indexOf("MAC") == 0) {
+                        windowMenu = new NativeMenu();
+                        rootMenu.addSubmenu(windowMenu, "Window");
+                    }
+                }
+                helpMenu = new NativeMenu();
+                rootMenu.addSubmenu(helpMenu, "Help");
+
+                // edit menu ------------------------------------------------------------
+
+                if (NativeApplication.supportsMenu) {
+                    editMenu.addItemAt((new NativeMenuItem("", true)), 2);
+                }
+
+                // file menu ------------------------------------------------------------
+                fileMenu.removeAllItems();
+
+                var newProjectCommand:NativeMenuItem = new NativeMenuItem("New Project", false);
+                newProjectCommand.addEventListener(Event.SELECT, newProjectHandler);
+                newProjectCommand.keyEquivalent = "n";
+
+                var openProjectCommand:NativeMenuItem = new NativeMenuItem("Open Project", false);
+                openProjectCommand.addEventListener(Event.SELECT, openProjectHandler);
+                openProjectCommand.keyEquivalent = "o";
+
+                var saveTestFileCommand:NativeMenuItem = new NativeMenuItem("Save", false);
+                saveTestFileCommand.addEventListener(Event.SELECT, saveTestFileSelectHandler);
+                saveTestFileCommand.keyEquivalent = "s";
+
+                var logFileCommand:NativeMenuItem = new NativeMenuItem("View Log File", false);
+                logFileCommand.addEventListener(Event.SELECT, projectLogFileSelectHandler);
+
+                var saveTestFileAsAS3Command:NativeMenuItem = new NativeMenuItem("Generate FlexUnit Tests", false);
+                saveTestFileAsAS3Command.addEventListener(Event.SELECT, saveTestFileAsAS3SelectHandler);
+
+				var saveTestFileAsJSCommand:NativeMenuItem = new NativeMenuItem("Generate JavaScript Tests", false);
+				saveTestFileAsJSCommand.addEventListener(Event.SELECT, saveTestFileAsJSelectHandler);
+				
+                fileMenu.addItem(newProjectCommand)
+                fileMenu.addItem(openProjectCommand)
+
+                fileMenu.addItem((new NativeMenuItem("", true)));
+                fileMenu.addItem(saveTestFileCommand);
+                fileMenu.addItem((new NativeMenuItem("", true)));
+                fileMenu.addItem(logFileCommand);
+                fileMenu.addItem((new NativeMenuItem("", true)));
+                fileMenu.addItem(saveTestFileAsAS3Command);
+				fileMenu.addItem(saveTestFileAsJSCommand);
+
+                if (!NativeApplication.supportsMenu) {
+                    var exitCommand:NativeMenuItem = new NativeMenuItem("Exit", false);
+                    exitCommand.addEventListener(Event.SELECT, exitSelectHandler);
+
+                    fileMenu.addItem((new NativeMenuItem("", true)));
+                    fileMenu.addItem(exitCommand)
+                }
+
+                // project menu -------------------------------------------------------------
+                var projectPropertiesCommand:NativeMenuItem = new NativeMenuItem("Properties", false);
+                projectPropertiesCommand.addEventListener(Event.SELECT, projectPropertiesSelectHandler);
+                projectPropertiesCommand.keyEquivalent = "p";
+
+                var viewEnvFileCommand:NativeMenuItem = new NativeMenuItem("View Environment File", false);
+                viewEnvFileCommand.addEventListener(Event.SELECT, projectViewCurrentEnvFileSelectHandler);
+
+                var viewAutomationTreeCommand:NativeMenuItem = new NativeMenuItem("View Application Tree", false);
+                viewAutomationTreeCommand.addEventListener(Event.SELECT, projectViewCurrentApplicationAutomationTreeSelectHandler);
+
+				var exploreAutomationChildrenCommand:NativeMenuItem = new NativeMenuItem("Explore Automation Children", false);
+				exploreAutomationChildrenCommand.addEventListener(Event.SELECT, exploreAutomationChildrenCurrnetApplication);
+
+				
+                var versionCheckCommand:NativeMenuItem = new NativeMenuItem("Version Check", false);
+                versionCheckCommand.addEventListener(Event.SELECT, versionCheckSelectedHandler);
+
+                var removeSnapshotCommand:NativeMenuItem = new NativeMenuItem("Remove Unused Snapshot Files", false);
+                removeSnapshotCommand.addEventListener(Event.SELECT, removeUnusedSnapshotsSelectedHandler);
+
+                projectMenu.addItemAt(projectPropertiesCommand, 0);
+                projectMenu.addItemAt(viewEnvFileCommand, 1);
+                projectMenu.addItemAt(viewAutomationTreeCommand, 2);
+                projectMenu.addItemAt(versionCheckCommand, 3);
+                projectMenu.addItemAt(removeSnapshotCommand, 4);
+				projectMenu.addItemAt(exploreAutomationChildrenCommand, 5);
+
+                // Help menu -------------------------------------------------------------
+                var flexMonkeyForumCommand:NativeMenuItem = new NativeMenuItem("FlexMonkey Help", false);
+                flexMonkeyForumCommand.addEventListener(Event.SELECT, flexMonkeyForumSelectHandler);
+
+                helpMenu.addItem(flexMonkeyForumCommand);
+
+                if (!NativeApplication.supportsMenu) {
+                    helpMenu.addItem((new NativeMenuItem("", true)));
+                    var aboutCommand:NativeMenuItem = new NativeMenuItem("About", false);
+                    aboutCommand.addEventListener(Event.SELECT, aboutSelectHandler);
+
+                    helpMenu.addItem(aboutCommand);
+                }
+            }
+
+            //
+            // menu handlers
+            //
+
+            private function exitingHandler(event:Event):void {
+                event.preventDefault();
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.MONKEY_EXIT));
+            }
+
+            // file menu select handlers ------------------------------------------------
+            private function newProjectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.NEW_PROJECT));
+            }
+
+            private function openProjectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.OPEN_PROJECT));
+            }
+
+            private function saveTestFileSelectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.SAVE));
+            }
+
+            private function saveTestFileAsAS3SelectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.GENERATE_AS3_FLEXUNIT_TESTS));
+            }
+			private function saveTestFileAsJSelectHandler(event:Event):void {
+				FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.GENERATE_JS_TESTS));
+			}
+			
+            private function exitSelectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.MONKEY_EXIT));
+            }
+
+            // project menu select handlers
+            private function projectPropertiesSelectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.OPEN_PROJECT_PROPERTIES_WINDOW));
+            }
+
+            // log menu select handlers
+            private function projectLogFileSelectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.OPEN_LOG_FILE_VIEW));
+            }
+
+            // view current env file menu select handlers
+            private function projectViewCurrentEnvFileSelectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.OPEN_ENV_FILE_VIEW));
+            }
+
+            // view current application automation tree data
+            private function projectViewCurrentApplicationAutomationTreeSelectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.OPEN_APPLICATION_AUTOMATION_TREE_VIEW));
+            }
+			
+			private function exploreAutomationChildrenCurrnetApplication(event:Event):void{
+				FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.EXPLORE_APP));
+			}
+
+            private function versionCheckSelectedHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.CHECK_LIBRARY_VERSION));
+            }
+
+            private function removeUnusedSnapshotsSelectedHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new SnapshotEvent(SnapshotEvent.REMOVE_UNUSED_SNAPSHOTS));
+            }
+
+            // help menu select handler
+            private function flexMonkeyForumSelectHandler(event:Event):void {
+                var url:String = "http://www.gorillalogic.com/flexmonkey";
+                var request:URLRequest = new URLRequest(url);
+
+                try {
+                    navigateToURL(request);
+                } catch (e:Error) {
+                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "Could not launch FlexMonkey Forum in Browser"));
+                }
+            }
+
+            private function aboutSelectHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.HELP_ABOUT));
+            }
+
+            private function gorillaButtonHandler(event:MouseEvent):void {
+                try {
+                    navigateToURL(new URLRequest("http://www.gorillalogic.com/flexmonkey"));
+                } catch (e:Error) {
+                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "Could not launch http://www.gorillalogic.com/flexmonkey in Browser"));
+                }
+            }
+
+            //
+            // overlay window management
+            //
+
+            private function addWindowEventHandlers():void {
+                FMHub.instance.listen(FMAlertEvent.Alert, fmAlertEventHandler, this);
+                FMHub.instance.listen(FMAlertEvent.ERROR, fmErrorEventHandler, this);
+
+                FMHub.instance.listen(ApplicationEvent.CHECK_LIBRARY_VERSION, checkVersionHandler, true);
+                FMHub.instance.listen(ProjectFilesEvent.OPENING_TEST_PROJECT_FILE, openingTestItems, this);
+                FMHub.instance.listen(ProjectFilesEvent.TEST_PROJECT_FILE_OPENED, testProjectFileOpen, this);
+
+                FMHub.instance.listen(MonkeyNodeEvent.EDIT_MONKEY_NODE, editMonkeyNodeHandler, this);
+                FMHub.instance.listen(FMRunnerEvent.SETUP_TEST_RUNNER, runTestsHandler, this);
+
+                FMHub.instance.listen(MonkeyRunnableEvent.CONFIRM_DELETE_MONKEY_RUNNABLE, confirmDeleteMonkeyRunnableHandler, this);
+                FMHub.instance.listen(MonkeyRunnableEvent.EDIT_MONKEY_RUNNABLE, editMonkeyRunnderHandler, this);
+                FMHub.instance.listen(MonkeyRunnableEvent.EDIT_NEW_MONKEY_RUNNABLE, editNewMonkeyRunnderHandler, this);
+				FMHub.instance.listen(MonkeyRunnableEvent.EXPLORE_CHILDREN_POPUP, exploreChildrenPopupHandler, this);
+				FMHub.instance.listen(MonkeyRunnableEvent.EXPLORE_CHILDREN_POPUP_PROPVIEW, exploreChildrenPopupHandlerPropview, this);
+                FMHub.instance.listen(MonkeyRunnableEvent.EDIT_VERIFY_SPY_WINDOW, editVerifySpyHandler, this);
+                FMHub.instance.listen(MonkeyRunnableEvent.EDIT_VERIFY_SNAPSHOT_WINDOW, editSnapshotHandler, this);
+                FMHub.instance.listen(MonkeyRunnableEvent.SHOW_VERIFY_SNAPSHOT_WINDOW, showSnapshotHandler, this);
+
+                FMHub.instance.listen(ProjectFilesEvent.FAILED_TO_OPEN_PROJECT, failedToOpenProjectHandler, this);
+				FMHub.instance.listen(ProjectFilesEvent.PROMPT_FOR_NEW_PROJECT, promptForNewProjectHandler, this);
+
+                FMHub.instance.listen(StatusCheckEvent.SHOW_STATUS_WINDOW, showStatusWindowHandler, this);
+
+                //loading all runnables
+                FMHub.instance.listen(InteractionEvent.EXPAND, expandHandler, this, false, -1, true);
+            }
+
+            private function checkVersionHandler(event:Event):void {
+                versionCheckView.visible = true;
+            }
+
+            private function openingTestItems(event:Event):void {
+                //splashScreen.show();
+                splashScreen.visible = true;
+
+                if (testHome != null && mainGroup.contains(testHome)) {
+                    mainGroup.removeElement(testHome);
+                }
+            }
+
+            private function testProjectFileOpen(event:Event):void {
+                mainGroup.addElementAt(testHome, 0);
+                splashFadeOut.play();
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.UPDATE_SUMMARY));
+            }
+
+            protected function splashFadeOutEffectEndHandler(event:EffectEvent):void {
+                //splashScreen.hide();
+                splashScreen.visible = false;
+            }
+
+            private function failedToOpenProjectHandler(event:ProjectFilesEvent):void {
+                projectIssueDialog.message = event.item as String;
+                projectIssueDialog.visible = true;
+                splashFadeOut.play();
+            }
+
+			private function promptForNewProjectHandler(event:ProjectFilesEvent):void {
+				splashScreen.visible = false;
+			}
+			
+            private function fmAlertEventHandler(event:FMAlertEvent):void {
+                alertDialog.alertMessage = event.alertMessage;
+                alertDialog.visible = true;
+            }
+
+            private function fmErrorEventHandler(event:FMAlertEvent):void {
+                alertDialog.currentState = "error";
+                alertDialog.alertTitle = "FlexMonkey Error Message";
+                alertDialog.alertMessage = event.alertMessage;
+                alertDialog.visible = true;
+            }
+
+            private function editMonkeyNodeHandler(event:MonkeyNodeEvent):void {
+                monkeyNodeForm.monkeyNode = event.monkeyNode;
+                monkeyNodeForm.openPopup();
+            }
+
+            private function runTestsHandler(event:FMRunnerEvent):void {
+				testRunner.closePopup();
+                testRunner.openPopup();
+            }
+
+            private function confirmDeleteMonkeyRunnableHandler(event:MonkeyRunnableEvent):void {
+                monkeyRunnableDeleteConfirmation.node = event.monkeyRunnable;
+                monkeyRunnableDeleteConfirmation.openPopup();
+            }
+
+            private function editMonkeyRunnderHandler(event:MonkeyRunnableEvent):void {
+                loadMonkeyRunnableForm(event.monkeyRunnable, "base");
+            }
+
+            private function editNewMonkeyRunnderHandler(event:MonkeyRunnableEvent):void {
+                loadMonkeyRunnableForm(event.monkeyRunnable, "newMonkeyRunnable");
+            }
+            private function exploreChildrenPopupHandler(event:MonkeyRunnableEvent){
+				exploreChildrenForm.openPopup("newMonkeyRunnable");
+				
+			}
+			private function exploreChildrenPopupHandlerPropview(event:MonkeyRunnableEvent){
+		
+				this.nativeWindow.alwaysInFront = true;
+				this.nativeWindow.alwaysInFront = false;
+				exploreChildrenForm.verifyMonkeyCommand = event.monkeyRunnable as VerifyMonkeyCommand;
+				exploreChildrenForm.currentState = "spyProperties";
+			}
+            private function editVerifySpyHandler(event:MonkeyRunnableEvent):void {
+                loadMonkeyRunnableForm(event.monkeyRunnable, "spyProperties");
+            }
+
+            private function editSnapshotHandler(event:MonkeyRunnableEvent):void {
+                loadMonkeyRunnableForm(event.monkeyRunnable, "baseEditSnapshot");
+            }
+
+            private function showSnapshotHandler(event:MonkeyRunnableEvent):void {
+                loadMonkeyRunnableForm(event.monkeyRunnable, "baseDisplaySnapshot");
+            }
+
+            private function showStatusWindowHandler(event:StatusCheckEvent):void {
+                statusDialog.setup(event.installedVersion, event.latestVersion, event.newsItems);
+                statusDialog.visible = true;
+            }
+
+            private function loadMonkeyRunnableForm(monkeyRunnable:MonkeyRunnable, state:String):void {
+
+                //show proper edit form
+                if (monkeyRunnable is UIEventMonkeyCommand) {
+                    uiEventForm.uiEvent = monkeyRunnable as UIEventMonkeyCommand;
+                    uiEventForm.openPopup();
+                } else if (monkeyRunnable is PauseMonkeyCommand) {
+                    pauseForm.pause = monkeyRunnable as PauseMonkeyCommand;
+                    pauseForm.openPopup();
+                } else if (monkeyRunnable is VerifyMonkeyCommand) {
+                    if (state == "spyProperties") {
+                        verifyForm.isNewVerify = true;
+                    }
+                    verifyForm.verifyMonkeyCommand = monkeyRunnable as VerifyMonkeyCommand;
+                    verifyForm.openPopup(state);
+                } else if (monkeyRunnable is VerifyGridMonkeyCommand) {
+                    verifyGridForm.verifyGridMonkeyCommand = monkeyRunnable as VerifyGridMonkeyCommand;
+                    verifyGridForm.openPopup(state);
+                } else if (monkeyRunnable is VerifyPropertyMonkeyCommand) {
+                    verifyPropForm.verifyPropertyMonkeyCommand = monkeyRunnable as VerifyPropertyMonkeyCommand;
+                    verifyPropForm.openPopup(state);
+                } else if (monkeyRunnable is SetPropertyMonkeyCommand) {
+                    setPropertyCmdForm.command = monkeyRunnable as SetPropertyMonkeyCommand;
+                    setPropertyCmdForm.openPopup(state);
+                } else if (monkeyRunnable is StoreValueMonkeyCommand) {
+                    storeValueForm.command = monkeyRunnable as StoreValueMonkeyCommand;
+                    storeValueForm.openPopup(state);
+                } else {
+                    callFunctionForm.command = monkeyRunnable as CallFunctionMonkeyCommand;
+                    callFunctionForm.openPopup(state);
+                }
+				this.nativeWindow.alwaysInFront = true;
+				this.nativeWindow.alwaysInFront = false;
+            }
+
+            protected function watchHowToVideosClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new Event(ApplicationEvent.OPEN_HOW_TO_VIDEOS));
+            }
+
+            //
+            // load all runnable items
+            //
+
+            private function expandHandler(event:InteractionEvent):void {
+                if (event.monkeyNodeTarget == null && !TestMonkeyNodeItemRenderer.allRunnablesLoaded) {
+                    splashLoaddingRunnables.visible = true;
+                    TestMonkeyNodeItemRenderer.allRunnablesLoaded = true;
+                    this.addEventListener(Event.ENTER_FRAME, nextFrameHandler);
+                }
+            }
+
+            private function nextFrameHandler(event:Event):void {
+                var runnableQueue:Array = TestMonkeyNodeItemRenderer.runnableQueue;
+
+                if (runnableQueue == null || runnableQueue.length == 0) {
+                    this.removeEventListener(Event.ENTER_FRAME, nextFrameHandler);
+                    splashLoaddingRunnables.visible = false;
+                } else {
+                    var nextNode:TestMonkeyNodeItemRenderer = runnableQueue[0] as TestMonkeyNodeItemRenderer;
+                    nextNode.loadRunnables();
+                    runnableQueue.shift();
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <s:Fade id="splashFadeOut"
+                target="{ splashScreen }"
+                effectEnd="splashFadeOutEffectEndHandler(event)"
+                duration="1000"
+                alphaFrom="1"
+                alphaTo=".2"/>
+
+        <views:TestHome id="testHome"
+                        left="132"/>
+    </fx:Declarations>
+
+    <!-- main content group -->
+    <s:Group id="mainGroup"
+             bottom="0"
+             left="0"
+             right="0"
+             top="0">
+
+        <views:MenuPalette id="menuPalette"
+                           left="0"
+                           top="0"/>
+
+        <s:Button skinClass="com.gorillalogic.flexmonkey.views.skins.MainWindowHelpButtonSkin"
+                  click="gorillaButtonHandler(event)"
+                  label="Help Pages"
+                  top="470"
+                  left="12.5"/>
+
+        <s:Button skinClass="com.gorillalogic.flexmonkey.views.skins.MainWindowHelpButtonSkin"
+                  click="watchHowToVideosClickHandler(event)"
+                  label="How-To Videos"
+                  top="510"
+                  left="12.5"/>
+
+
+        <components:RecordDialog id="recordDialog"
+                                 left="81"
+                                 top="203"/>
+    </s:Group>
+
+
+    <!-- popups / overlay windows -->
+    <runner:TestRunner id="testRunner"
+                       bottom="85"
+                       left="85"
+                       right="85"
+                       top="85"
+                       visible="false"/>
+    <forms:VersionCheckView id="versionCheckView"
+                            visible="false"/>
+    <forms:MonkeyNodeForm id="monkeyNodeForm"
+                          visible="false"/>
+    <forms:UIEventForm id="uiEventForm"
+                       visible="false"/>
+    <forms:VerifyForm id="verifyForm"
+                      visible="false"/>
+	<forms:ExploreChildrenForm id="exploreChildrenForm" visible="false"/>
+    <forms:VerifyPropForm id="verifyPropForm"
+                          visible="false"/>
+    <forms:VerifyGridForm id="verifyGridForm"
+                          visible="false"/>
+    <forms:SetPropertyForm id="setPropertyCmdForm"
+                           visible="false"/>
+    <forms:StoreValueForm id="storeValueForm"
+                          visible="false"/>
+    <forms:PauseForm id="pauseForm"
+                     visible="false"/>
+    <forms:MonkeyRunnableDeleteConfirmation id="monkeyRunnableDeleteConfirmation"
+                                            visible="false"/>
+    <forms:AlertDialog id="alertDialog"
+                       visible="false"/>
+    <forms:ProjectIssuesDialog id="projectIssueDialog"
+                               visible="false"/>
+    <forms:CallFunctionForm id="callFunctionForm"
+                            visible="false"/>
+    <forms:FlexMonkeyStatusDialog id="statusDialog"
+                                  visible="false"/>
+
+
+    <!-- native window manager -->
+    <views:NativeWindowManager airMonkeyWindow="{this}"/>
+
+    <!-- resizing disable overlay -->
+    <s:Rect id="resizeOverlay"
+            bottom="0"
+            left="0"
+            right="0"
+            top="0"
+            visible="false">
+        <s:fill>
+            <s:SolidColor color="#ffffff"
+                          alpha=".45"/>
+        </s:fill>
+    </s:Rect>
+
+    <views:SplashLoadingOverlay id="splashScreen"
+                                visible="false"/>
+    <views:SplashLoadingRunnableItems id="splashLoaddingRunnables"
+                                      visible="false"/>
+
+</s:Window>
+

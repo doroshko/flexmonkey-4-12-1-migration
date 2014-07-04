@@ -1,0 +1,78 @@
+<TopNode>
+  <TestSuite name="FlexMonkey_Flex4_Suite" description="">
+    <TestCase name="TestCases" description="">
+      <Test name="ASetupUp" description="" defaultThinkTime="500">
+        <UIEvent command="Open" value="_FlexComponentZoo_Tree1" prop="automationName">
+          <arg value="Spark"/>
+        </UIEvent>
+      </Test>
+      <Test name="Button" description="null" defaultThinkTime="500">
+        <UIEvent command="Click" value="Standard Button" prop="automationName"/>
+        <Verify description="New Verify" isRetryable="false" delay="0" attempts="1" snapshotURL="F12CADDC-563A-50CD-A6ED-CEB0130AEF3D.snp" value="repeatText" prop="automationName" verifyBitmap="false" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Standard Button pressed!&#xA;" actualValue="Standard Button pressed!&#xA;" type="property"/>
+        </Verify>
+      </Test>
+      <Test name="ButtonBar" description="null" defaultThinkTime="500">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName">
+          <arg value="Spark>ButtonBar"/>
+        </UIEvent>
+        <UIEvent command="Select" value="myButtonBar" prop="automationName">
+          <arg value="Red"/>
+        </UIEvent>
+        <Verify description="New Verify" isRetryable="false" delay="0" attempts="1" snapshotURL="396E4AA6-B75C-563B-7FAF-D2CB7404C84A.snp" value="txtColor" prop="automationName" verifyBitmap="false" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Red selected!" actualValue="Red selected!" type="property"/>
+        </Verify>
+        <UIEvent command="Select" value="myButtonBar" prop="automationName">
+          <arg value="Blue"/>
+        </UIEvent>
+        <Verify description="New Verify" isRetryable="false" delay="0" attempts="1" snapshotURL="BE47CD5F-F303-E40F-6EED-D2CD7A0CDFFD.snp" value="myTextArea" prop="automationName" verifyBitmap="false" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Button Bar index clicked = 2&#xA;Button Bar previous index = 0&#xA;Button Bar label clicked = Blue" actualValue="Button Bar index clicked = 2&#xA;Button Bar previous index = 0&#xA;Button Bar label clicked = Blue" type="property"/>
+        </Verify>
+      </Test>
+      <Test name="CheckBox" description="null" defaultThinkTime="500">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName">
+          <arg value="Spark>CheckBox"/>
+        </UIEvent>
+        <UIEvent command="Click" value="Lettuce" prop="automationName"/>
+        <UIEvent command="Click" value="Mayonnaise" prop="automationName"/>
+        <UIEvent command="Click" value="Tomato" prop="automationName"/>
+        <Verify description="New Verify" isRetryable="false" delay="0" attempts="1" snapshotURL="778D3AB0-4375-F6A8-317A-D2D76D3A9354.snp" value="totalString" prop="automationName" verifyBitmap="false" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="$5.25" actualValue="$5.25" type="property"/>
+        </Verify>
+      </Test>
+      <Test name="ComboBox" description="null" defaultThinkTime="500">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName">
+          <arg value="Spark>ComboBox"/>
+        </UIEvent>
+        <UIEvent command="Open" value="_ComboBoxView_ComboBox1" prop="id">
+          <arg value="null"/>
+        </UIEvent>
+        <UIEvent command="Select" value="_ComboBoxView_ComboBox1" prop="id">
+          <arg value="American Express"/>
+        </UIEvent>
+        <Verify description="New Verify" isRetryable="false" delay="0" attempts="1" snapshotURL="C3CCDFE6-CD77-7B9F-A32C-D2DCC1F70642.snp" value="myData" prop="automationName" verifyBitmap="false" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Data: 3" actualValue="Data:" type="property"/>
+        </Verify>
+      </Test>
+      <Test name="List" description="null" defaultThinkTime="500">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName">
+          <arg value="Spark>List"/>
+        </UIEvent>
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName">
+          <arg value="Spark>List"/>
+        </UIEvent>
+      </Test>
+      <Test name="PopUpAnchor" description="null" defaultThinkTime="500"/>
+      <Test name="RadioButton" description="null" defaultThinkTime="500"/>
+      <Test name="RichEditableText" description="null" defaultThinkTime="500"/>
+      <Test name="ScrollBar" description="null" defaultThinkTime="500"/>
+      <Test name="Scroller" description="null" defaultThinkTime="500"/>
+      <Test name="Slider" description="null" defaultThinkTime="500"/>
+      <Test name="Spinner" description="null" defaultThinkTime="500"/>
+      <Test name="TabBar" description="null" defaultThinkTime="500"/>
+      <Test name="TextArea" description="null" defaultThinkTime="500"/>
+      <Test name="TextInput" description="null" defaultThinkTime="500"/>
+      <Test name="ToggleButton" description="null" defaultThinkTime="500"/>
+    </TestCase>
+  </TestSuite>
+</TopNode>

@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Window xmlns:mx="library://ns.adobe.com/flex/mx"
+                      xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+					  xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+                      xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+                      creationComplete="create(event)"
+					  showStatusBar="false"
+					  windowMove="moveHandler(event)"
+					  windowComplete="windowCompleteHandler(event)"
+					  close="closeHandler(event)">
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+			import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+			import com.gorillalogic.flexmonkey.events.InteractionEvent;
+			import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+			import com.gorillalogic.flexmonkey.events.RecordEvent;
+			import com.gorillalogic.flexmonkey.model.ApplicationModel;
+			import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+			import com.gorillalogic.flexmonkey.monkeyCommands.*;
+			import com.gorillalogic.flexmonkey.views.renderers.RecordedItemRenderer;
+			import com.gorillalogic.framework.FMHub;
+			import com.gorillalogic.utils.DragRequest;
+			import com.gorillalogic.utils.FMMessageConstants;
+			
+			import mx.binding.utils.ChangeWatcher;
+			import mx.core.DragSource;
+			import mx.events.CollectionEvent;
+			import mx.events.DragEvent;
+			import mx.events.EffectEvent;
+			import mx.events.FlexEvent;
+			import mx.events.FlexNativeWindowBoundsEvent;
+			import mx.managers.PopUpManager;
+
+            [Bindable] private var isDraggingItems:Boolean = false;
+
+            [Bindable] private var isRecording:Boolean = true;
+            [Bindable] private var dragAllSource:DragSource;
+            [Bindable] private var model:ProjectTestModel;
+            [Bindable] private var applicationModel:ApplicationModel;
+
+            [Bindable] private var suiteDragSource:DragSource;
+            [Bindable] private var caseDragSource:DragSource;
+            [Bindable] private var testDragSource:DragSource;
+			
+			[Bindable] private var pauseDragSource:DragSource;
+			[Bindable] private var verifyDragSource:DragSource;
+			[Bindable] private var verifyGridDragSource:DragSource;
+			[Bindable] private var verifyPropDragSource:DragSource;
+			[Bindable] private var setPropertyDragSource:DragSource;
+			[Bindable] private var storeValueDragSource:DragSource;
+			[Bindable] private var functionDragSource:DragSource;
+
+            [Bindable] private var showDragNav:Boolean = false;
+			
+			[Bindable] public var lastX:Number;
+			[Bindable] public var lastY:Number;
+			
+            private function create(event:FlexEvent):void {
+                //setup test model
+                model = ProjectTestModel.instance;
+                applicationModel = ApplicationModel.instance;
+
+				FMHub.instance.listen(MonkeyRunnableEvent.EDIT_MONKEY_RUNNABLE_RECORDVIEW, editMonkeyRunnderHandler, this);
+                FMHub.instance.listen(InteractionEvent.DRAG_STARTED, outsideDragStartedHandler, this);
+
+                dragAllSource = new DragSource();
+                dragAllSource.addData(DragRequest.MOVE_ALL_RECORDED_ITEMS, DragRequest.TYPE);
+
+                suiteDragSource = new DragSource();
+                suiteDragSource.addData(DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_SUITE, DragRequest.TYPE);
+
+                caseDragSource = new DragSource();
+                caseDragSource.addData(DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_CASE, DragRequest.TYPE);
+
+                testDragSource = new DragSource();
+                testDragSource.addData(DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_TEST, DragRequest.TYPE);
+				
+				pauseDragSource = new DragSource();
+				pauseDragSource.addData(DragRequest.NEW_PAUSE, DragRequest.TYPE);
+				
+				verifyDragSource = new DragSource();
+				verifyDragSource.addData(DragRequest.NEW_VERIFY, DragRequest.TYPE);
+				
+				verifyGridDragSource = new DragSource();
+				verifyGridDragSource.addData(DragRequest.NEW_VERIFY_GRID, DragRequest.TYPE);
+				
+				verifyPropDragSource = new DragSource();
+				verifyPropDragSource.addData(DragRequest.NEW_VERIFY_PROP, DragRequest.TYPE);
+				
+				setPropertyDragSource = new DragSource();
+				setPropertyDragSource.addData(DragRequest.NEW_SET_PROPERTY_CMD, DragRequest.TYPE);
+				
+				storeValueDragSource = new DragSource();
+				storeValueDragSource.addData(DragRequest.NEW_STORE_VALUE_CMD, DragRequest.TYPE);
+				
+				functionDragSource = new DragSource();
+				functionDragSource.addData(DragRequest.NEW_FUNCTION_CMD, DragRequest.TYPE);
+
+                ChangeWatcher.watch(applicationModel, "isConnected", connectedHandler);
+                ChangeWatcher.watch(model, "recordItems", recordItemsChangedHandler);
+                ChangeWatcher.watch(model, [ "recordItems", "length" ], recordItemsChangedHandler);
+				this.keepOnTopCheckButton.selected = true;
+				alwaysInFront = true;
+            }
+			
+			private function windowCompleteHandler(event:Event):void {
+				if (this.nativeWindow) {
+					this.lastX = nativeWindow.x;
+					this.lastY = nativeWindow.y;
+					this.nativeWindow.addEventListener(Event.CLOSE, closeHandler);
+				}
+				keepOnTopCheckButton.selected = alwaysInFront;
+			}
+			
+			private function moveHandler(event:FlexNativeWindowBoundsEvent):void {
+				if (nativeWindow) {
+					this.lastX = event.afterBounds.x;
+					this.lastY = event.afterBounds.y;
+				}
+			}
+
+			public function closeHandler(event:Event):void {
+				if (isRecording) {
+					isRecording = false;
+					FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.STOP_RECORDING));
+				}
+				isDraggingItems=false;
+				FMHub.instance.dispatchEventAsync(new ApplicationEvent(ApplicationEvent.RECORD_WINDOW_VIEW_CLOSED));
+			}
+			
+            private function recordItemsChangedHandler(event:Event):void {
+                if (model.recordItems != null && model.recordItems.length > 0) {
+                    model.recordItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, recordItemsChangedHandler, false, 0, false);
+
+                    if (!showDragNav) {
+                        showDragNav = true;
+						dragNav.visible=true;
+                        dragNavInEffect.play();
+                    }
+                } else {
+                    if (showDragNav) {
+                        showDragNav = false;
+                        dragNavOutEffect.play();
+						dragNav.visible=false;
+                    }
+                }
+            }
+
+            private function connectedHandler(event:Event = null):void {
+                if (this.visible) {
+                    if (ApplicationModel.instance.isConnected) {
+                        FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.START_RECORDING));
+                        record_btn_comp.enabled = true;
+						isRecording = true;
+                        if (!connectedEffect.isPlaying) {
+                            connectedEffect.play();
+							connectedEffect2.play();
+                        }
+                    } else {
+						record_btn_comp.enabled = false;
+						isRecording = false;
+                        if (!notConnectedEffect.isPlaying) {
+                            notConnectedEffect.play();
+							notConnectedEffect2.play();
+                        }
+                    }
+                }
+            }
+
+			private function closePopupButtonClickHandler(event:Event):void {
+				FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.CLOSE_RECORD_WINDOW_VIEW));
+			}
+						
+			private function keepOnTopCheckboxHandler(event:Event):void {
+				alwaysInFront = !alwaysInFront;
+			}
+			private function editMonkeyRunnderHandler(event:MonkeyRunnableEvent):void {
+				loadMonkeyRunnableForm(event.monkeyRunnable, "base");
+			}
+			private function loadMonkeyRunnableForm(monkeyRunnable:MonkeyRunnable, state:String):void {
+				
+				//show proper edit form
+				if (monkeyRunnable is UIEventMonkeyCommand) {
+					uiEventForm.uiEvent = monkeyRunnable as UIEventMonkeyCommand;
+					uiEventForm.openPopup();
+				} else if (monkeyRunnable is PauseMonkeyCommand) {
+					pauseForm.pause = monkeyRunnable as PauseMonkeyCommand;
+					pauseForm.openPopup();
+				} else if (monkeyRunnable is VerifyMonkeyCommand) {
+					if (state == "spyProperties") {
+						verifyForm.isNewVerify = true;
+					}
+					verifyForm.verifyMonkeyCommand = monkeyRunnable as VerifyMonkeyCommand;
+					verifyForm.openPopup(state);
+				} else if (monkeyRunnable is VerifyGridMonkeyCommand) {
+					verifyGridForm.verifyGridMonkeyCommand = monkeyRunnable as VerifyGridMonkeyCommand;
+					verifyGridForm.openPopup(state);
+				} else if (monkeyRunnable is VerifyPropertyMonkeyCommand) {
+					verifyPropForm.verifyPropertyMonkeyCommand = monkeyRunnable as VerifyPropertyMonkeyCommand;
+					verifyPropForm.openPopup(state);
+				} else if (monkeyRunnable is SetPropertyMonkeyCommand) {
+					setPropertyCmdForm.command = monkeyRunnable as SetPropertyMonkeyCommand;
+					setPropertyCmdForm.openPopup(state);
+				} else if (monkeyRunnable is StoreValueMonkeyCommand) {
+					storeValueForm.command = monkeyRunnable as StoreValueMonkeyCommand;
+					storeValueForm.openPopup(state);
+				} else {
+					callFunctionForm.command = monkeyRunnable as CallFunctionMonkeyCommand;
+					callFunctionForm.openPopup(state);
+				}
+			}
+			
+            private function deleteButtonClickHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.DELETE_ITEMS));
+            }
+
+            private function playButtonClickHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.PLAY_ITEMS));
+            }
+
+            protected function outsideDragStartedHandler(event:InteractionEvent):void {
+                var dragType:String = event.dragSource.dataForFormat(DragRequest.TYPE) as String;
+
+                //if (!this.visible && dragType != DragRequest.MOVE_MONKEY_RUNNABLE) {
+                //    hideForDrag();
+                // }
+            }
+
+            protected function dragDownHandler(event:Event):void {
+                isDraggingItems = false;
+                mainGroup.visible = true;
+                popupFadeIn.play();
+                FMHub.instance.unlisten(InteractionEvent.DRAG_DONE, dragDownHandler, this);
+            }
+         
+            protected function popupFadeOutEffectEndHandler(event:EffectEvent):void {
+                mainGroup.visible = false;
+                FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.STOP_RECORDING));
+            }
+
+            protected function popupFadeInEffectStartHandler(event:EffectEvent):void {
+                mainGroup.visible = true; 
+            }
+			protected function doRecordButtonClick():void{
+				if(isRecording){
+					stopRecord();
+				} else {
+					record();
+				}
+			}
+			protected function record():void{
+		
+					isRecording = true;
+					FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.START_RECORDING));
+			
+			}
+			protected function stopRecord():void{
+		
+					isRecording = false;
+					FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.STOP_RECORDING));
+		
+			}
+        ]]>
+    </fx:Script>
+
+
+
+    <fx:Declarations>
+        <s:Fade id="popupFadeOut"
+                target="{ mainGroup }"
+                effectEnd="popupFadeOutEffectEndHandler(event)"
+                duration="500"
+                alphaFrom="1"
+                alphaTo="0"/>
+
+        <s:Fade id="popupFadeIn"
+                target="{ mainGroup }"
+                effectStart="popupFadeInEffectStartHandler(event)"
+                duration="500"
+                alphaFrom="0"
+                alphaTo="1"/>
+
+        <s:Animate id="notConnectedEffect"
+                   target="{ runnerList }"
+                   duration="500">
+            <s:SimpleMotionPath property="top"
+                                valueFrom="7"
+                                valueTo="52"/>
+        </s:Animate>
+
+        <s:Animate id="connectedEffect"
+                   target="{ runnerList }"
+                   duration="500">
+            <s:SimpleMotionPath property="top"
+                                valueFrom="52"
+                                valueTo="7"/>
+        </s:Animate>
+		<s:Animate id="notConnectedEffect2"
+				   target="{ leftNav }"
+				   duration="500">
+			<s:SimpleMotionPath property="top"
+								valueFrom="7"
+								valueTo="52"/>
+		</s:Animate>
+		
+		<s:Animate id="connectedEffect2"
+				   target="{ leftNav }"
+				   duration="500">
+			<s:SimpleMotionPath property="top"
+								valueFrom="52"
+								valueTo="7"/>
+		</s:Animate>
+
+        <s:Fade id="dragNavOutEffect"
+                target="{ dragNav }"
+                duration="500"
+                alphaFrom="1"
+                alphaTo="0"/>
+
+        <s:Fade id="dragNavInEffect"
+                target="{ dragNav }"
+                duration="500"
+                alphaFrom="0"
+                alphaTo="1"/>
+    </fx:Declarations>
+
+
+    <!-- popup window -->
+    <s:Group id="mainGroup"
+             width="100%"
+             height="100%"
+             left="0"
+             top="0">
+
+        <s:Rect bottom="0"
+                left="0"
+                right="0"
+                top="0">
+                <!-- radiusX="5"> -->
+            <s:fill>
+                <s:SolidColor color="#ff0c0c"/>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke color="#000000"
+                                    weight="2"
+                                    alpha=".5"/>
+            </s:stroke>
+        </s:Rect>
+
+        <!-- message box to display when window is open, but not connected to test application -->
+        <s:Group id="notConnectedBox"
+                 height="40"
+                 left="7"
+                 right="7"
+                 top="7">
+
+            <s:Rect bottom="0"
+                    left="0"
+                    right="0"
+                    top="0">
+                <s:fill>
+                    <s:SolidColor color="#eeeeee"
+                                  alpha="1"/>
+                </s:fill>
+                <s:stroke>
+                    <s:SolidColorStroke color="#333333"
+                                        weight="1"/>
+                </s:stroke>
+            </s:Rect>
+
+            <s:Label width="100%"
+                     text="{ FMMessageConstants.RECORDING_NOT_CONNECTED }"
+                     fontSize="11"
+                     fontWeight="bold"
+                     horizontalCenter="0"
+                     textAlign="center"
+                     verticalCenter="0"
+                     maxDisplayedLines="-1"/>
+        </s:Group>
+
+
+        <!-- list of recorded items -->
+        <s:List id="runnerList"
+                dataProvider="{ model.recordItems }"
+                bottom="45"
+                left="52"
+                right="7"
+                top="7"
+                itemRenderer="com.gorillalogic.flexmonkey.views.renderers.RecordedItemRenderer"
+                useVirtualLayout="false">
+            <s:layout>
+                <s:VerticalLayout paddingLeft="1"
+                                  paddingRight="1"
+                                  paddingTop="1"
+                                  gap="3"/>
+            </s:layout>
+        </s:List>
+
+        <s:Rect height="38"
+                bottom="0"
+                left="0"
+                right="0">
+			<!--
+                bottomLeftRadiusX="5"
+                bottomRightRadiusX="5">
+			-->
+            <s:fill>
+                <s:SolidColor color="#cccccc"/>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke color="#000000"
+                                    weight="2"
+                                    alpha=".5"/>
+            </s:stroke>
+        </s:Rect>
+<!-- left nav -->
+		<s:Group
+			width="45"
+			left="7"
+			top="7"
+			bottom="45" id="leftNav">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="0xFFFFFF" /></s:fill>
+				<s:stroke>
+					<s:SolidColorStroke color="#000000"
+								/>
+				</s:stroke>
+			</s:Rect>
+
+		<s:VGroup 
+				  horizontalAlign="center" width="100%" top="10">
+			
+			<components:DragComponent id="verifyIcon"
+									  dragSource="{verifyDragSource}"
+									  skinClass="com.gorillalogic.flexmonkey.views.skins.VerifyIconSkin"
+									  toolTip="New Verify Component Command"/>
+			<components:DragComponent id="verifyPropIcon"
+									  dragSource="{verifyPropDragSource}"
+									  skinClass="com.gorillalogic.flexmonkey.views.skins.VerifyPropIconSkin"
+									  toolTip="New Verify Expression Command"/>
+			<components:DragComponent id="verifyGridIcon"
+									  dragSource="{verifyGridDragSource}"
+									  skinClass="com.gorillalogic.flexmonkey.views.skins.VerifyGridIconSkin"
+									  toolTip="New Verify Grid Command"/>
+			<components:DragComponent id="storeValueCommand"
+									  dragSource="{storeValueDragSource}"
+									  skinClass="com.gorillalogic.flexmonkey.views.skins.KeySkin"
+									  toolTip="New Store Value Command"/>
+			<components:DragComponent id="setPropertyIcon"
+									  dragSource="{setPropertyDragSource}"
+									  skinClass="com.gorillalogic.flexmonkey.views.skins.GearIconSkin"
+									  toolTip="Set Property Command"/>
+			<components:DragComponent id="functionIcon"
+									  dragSource="{functionDragSource}"
+									  skinClass="com.gorillalogic.flexmonkey.views.skins.FunctionSkin"
+									  toolTip="Call Function Command"/>
+			<components:DragComponent id="pauseIcon"
+									  dragSource="{pauseDragSource}"
+									  skinClass="com.gorillalogic.flexmonkey.views.skins.PauseIconSkin"
+									  toolTip="New Pause Command"/>
+		</s:VGroup>
+		</s:Group>
+        <!-- bottom navigation -->
+        <s:HGroup height="25"
+                  bottom="10"
+                  left="15"
+                  verticalAlign="middle"
+                  gap="10">
+
+            <s:Button id="deleteButton"
+                      toolTip="Delete all Recorded Tests"
+                      click="deleteButtonClickHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.RecordPanelTrashCanSkin"/>
+
+            <components:PlayPauseButton id="playButton"
+                                        width="20"
+                                        height="20"
+										
+                                        enabled="{ ApplicationModel.instance.isConnected }"
+                                        toolTip="Play Recorded Tests"
+                                        click="playButtonClickHandler(event)"/>
+			<components:RecordButton id="record_btn_comp" click="doRecordButtonClick()" isRecording="{isRecording}">
+				
+			</components:RecordButton>
+
+			<s:Button id="closePopupButton"
+					  label="Close"
+					  toolTip="Close this window"
+					  click="closePopupButtonClickHandler(event)"
+					  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+			
+			<s:CheckBox id="keepOnTopCheckButton"
+					  label="Keep On Top"
+					  toolTip="Keep the record window on top"
+					  change="keepOnTopCheckboxHandler(event)"
+					  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyCheckBoxSkin"/>
+			
+        </s:HGroup>
+
+
+        <s:HGroup id="dragNav"
+                  height="25"
+                  bottom="10"
+                  right="15"
+                  verticalAlign="middle"
+                  gap="5"
+				  visible="false"
+                  alpha="0">
+
+            <s:Label text="Drag All Items: "
+                     fontSize="12"
+                     fontWeight="bold"
+                     paddingTop="2"/>
+
+            <components:DragComponent id="suiteIcon"
+                                      toolTip="Create Suite with Items"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.SuiteIconSkin"
+                                      dragSource="{ suiteDragSource }"/>
+
+            <components:DragComponent id="caseIcon"
+                                      toolTip="Create Case with Items"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.CaseIconSkin"
+                                      dragSource="{ caseDragSource }"/>
+
+            <components:DragComponent id="testIcon"
+                                      toolTip="Create Test with Items"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.TestIconSkin"
+                                      dragSource="{ testDragSource }"/>
+
+            <components:DragComponent toolTip="Drag to add items to existing Test"
+                                      bottom="15"
+                                      dragSource="{ dragAllSource }"/>
+        </s:HGroup>
+
+
+        <!-- overlay help -->
+        <s:Label text="{ FMMessageConstants.RECORDING_OPENED_FOR_RECORDING_MSG }"
+                 fontSize="20"
+                 horizontalCenter="0"
+                 left="75"
+                 right="30"
+                 textAlign="center"
+                 top="50"
+                 verticalCenter="0"
+                 maxDisplayedLines="-1"
+                 visible="{ ApplicationModel.instance.isConnected &amp;&amp; runnerList.dataProvider.length == 0 }"/>
+
+    </s:Group>
+	<forms:UIEventForm id="uiEventForm"
+					   visible="false"/>
+	<forms:VerifyForm id="verifyForm"
+					  visible="false"/>
+	<forms:VerifyPropForm id="verifyPropForm"
+						  visible="false"/>
+	<forms:VerifyGridForm id="verifyGridForm"
+						  visible="false"/>
+	<forms:SetPropertyForm id="setPropertyCmdForm"
+						   visible="false"/>
+	<forms:StoreValueForm id="storeValueForm"
+						  visible="false"/>
+	<forms:PauseForm id="pauseForm"
+					 visible="false"/>
+	<forms:CallFunctionForm id="callFunctionForm"
+							visible="false"/>
+
+</s:Window>

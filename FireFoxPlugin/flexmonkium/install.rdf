@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+ xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>flexmonkium@gorillalogic.com</em:id>
+    <em:name>FlexMonkium</em:name>
+    <em:version>1.1</em:version>
+    <em:creator>www.gorillalogic.com</em:creator>
+    <em:description>FlexMonkey Plugin for Selenium IDE</em:description>
+    <em:iconURL>chrome://flexmonkium/content/gorilla-48.png</em:iconURL>
+    <em:type>2</em:type>
+    <!--Preferences -->
+    <em:optionsURL>chrome://flexmonkium/content/options.xul</em:optionsURL>
+ 
+    <!-- its a firefox plugin -->
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>1.5</em:minVersion>
+        <em:maxVersion>6.*.*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+ 
+    <!-- this is an Se-IDE plugin, so we need to specify it as a requirement ->
+    <em:requires>   
+      <Description>
+        <em:id>{a6fd85ed-e919-4a43-a5af-8da18bda539f}</em:id>
+        <em:minVersion>1.0.5</em:minVersion>
+        <em:maxVersion>1.*.*</em:maxVersion>
+      </Description>  
+    </em:requires> 
+  </Description>
+</RDF>

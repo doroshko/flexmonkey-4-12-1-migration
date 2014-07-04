@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SkinnableContainer xmlns:mx="library://ns.adobe.com/flex/mx"
+                      xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+                      xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+                      creationComplete="create(event)">
+
+    <s:states>
+        <s:State name="base"/>
+        <s:State name="recordingDesired"/>
+        <s:State name="recordingActive"
+                 basedOn="recordingDesired"/>
+    </s:states>
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.events.InteractionEvent;
+			import com.gorillalogic.flexmonkey.events.RecordEvent;
+			import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+			import com.gorillalogic.flexmonkey.model.ApplicationModel;
+			import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+			import com.gorillalogic.framework.FMHub;
+			import com.gorillalogic.utils.DragRequest;
+			import com.gorillalogic.utils.FMMessageConstants;
+			
+			import mx.binding.utils.ChangeWatcher;
+			import mx.core.DragSource;
+			import mx.events.CollectionEvent;
+			import mx.events.DragEvent;
+			import mx.events.EffectEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+
+            [Bindable] private var isRecording:Boolean = false;
+            [Bindable] private var model:ProjectTestModel;
+            [Bindable] private var applicationModel:ApplicationModel;
+
+            public function recordWindowClosed(event:Event):void {
+                this.isRecording = false;
+				FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.STOP_RECORDING));
+				currentState = "base";
+            }
+
+            private function create(event:FlexEvent):void {
+                //setup test model
+                model = ProjectTestModel.instance;
+                applicationModel = ApplicationModel.instance;
+
+				FMHub.instance.listen(ApplicationEvent.RECORD_WINDOW_VIEW_CLOSED, recordWindowClosed, this);
+				
+                ChangeWatcher.watch(applicationModel, "isConnected", connectedHandler);
+            }
+
+            private function connectedHandler(event:Event = null):void {
+                if (currentState != "base") {
+                    if (ApplicationModel.instance.isConnected) {
+                        currentState = "recordingActive"
+                        FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.START_RECORDING));
+
+                        // if (!connectedEffect.isPlaying) {
+                        //     connectedEffect.play();
+                        // }
+                    } else {
+                        currentState = "recordingDesired"
+
+                        //if (!notConnectedEffect.isPlaying) {
+                        //    notConnectedEffect.play();
+                        //}
+                    }
+                }
+            }
+
+            private function recordIcon_clickHandler(event:MouseEvent):void {
+                if (!isRecording) {
+                    isRecording = true;
+					openRecordWindow();
+                } else {
+					closeRecordWindow();
+                }
+
+                //update message
+                connectedHandler();
+            }
+			
+			protected function openRecordWindow():void {
+				if (ApplicationModel.instance.isConnected) {
+					currentState = "recordingActive"
+				} else {
+					currentState = "recordingDesired"
+					// runnerList.top = 52;
+				}
+				FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.OPEN_RECORD_WINDOW_VIEW));
+			}
+			
+			protected function closeRecordWindow():void {
+				FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.CLOSE_RECORD_WINDOW_VIEW));
+			}
+
+        ]]>
+    </fx:Script>
+
+
+
+    <fx:Declarations>
+
+    </fx:Declarations>
+
+
+    <!-- tab from button -->
+    <s:Group width="35"
+             height="29"
+             left="0"
+             top="225"
+             includeIn="recordingDesired">
+        <s:Rect bottom="0"
+                left="0"
+                right="0"
+                top="0"
+                radiusX="15">
+            <s:fill>
+                <s:SolidColor color="#cccccc"/>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Rect>
+    </s:Group>
+
+    <s:Group id="extendedTab"
+             width="75"
+             height="29"
+             left="0"
+             top="225"
+             includeIn="recordingDesired"
+			 visible="false">
+        <s:Rect bottom="0"
+                left="0"
+                right="0"
+                top="0"
+                radiusX="15">
+            <s:fill>
+                <s:SolidColor color="#cccccc"/>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Rect>
+    </s:Group>
+
+    <components:RecordButton left="8"
+                             top="230"
+                             click="recordIcon_clickHandler(event)"
+                             isRecording="{ isRecording }"/>
+
+</s:SkinnableContainer>

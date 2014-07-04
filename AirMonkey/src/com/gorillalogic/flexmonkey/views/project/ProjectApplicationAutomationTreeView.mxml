@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU General Public License, v2.
+-->
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:viewComponents="com.gorillalogic.flexmonkey.application.UI.viewComponents.*"
+          xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+          xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+          skinClass="com.gorillalogic.flexmonkey.views.skins.WindowSkin"
+          creationComplete="create(event)"
+          showStatusBar="false"
+          width="650"
+          height="525"
+          title="FlexMonkey :: Application Automation Tree">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.flexmonkey.views.skins.AdvancedTextInputSkin;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.binding.utils.ChangeWatcher;
+            import mx.collections.ArrayCollection;
+
+            import spark.events.TextOperationEvent;
+
+            [Bindable] private var model:ApplicationModel;
+            [Bindable] private var selectedItem:Object;
+            private var searchPosition:int = 0;
+            private var flatTree:ArrayCollection;
+
+            private function create(event:Event):void {
+                model = ApplicationModel.instance;
+                loadFile();
+                ChangeWatcher.watch(model, "applicationAutomationTreeData", treeDataChanged);
+            }
+
+            private function refresh(event:Event):void {
+                loadFile();
+                clearSearchButtonClickHandler();
+            }
+
+            private function loadFile(event:Event = null):void {
+                if (ApplicationModel.instance.isConnected) {
+                    FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.GET_APPLICATION_AUTOMATION_TREE));
+                }
+            }
+
+            protected function treeDataChanged(event:Event):void {
+                flatTree = new ArrayCollection();
+
+                if (ApplicationModel.instance.applicationAutomationTreeData != null) {
+                    loadChildren(ApplicationModel.instance.applicationAutomationTreeData, flatTree);
+                    expandAll();
+                }
+            }
+
+            protected function expandAllClickHandler(event:MouseEvent):void {
+                expandAll();
+            }
+
+            private function expandAll():void {
+                compTree.openItems = flatTree;
+            }
+
+            private function loadChildren(data:Array, col:ArrayCollection):void {
+                for each (var o:Object in data) {
+                    col.addItem(o);
+
+                    var c:Array = o.children;
+
+                    if (c != null && c.length > 0) {
+                        loadChildren(c, col);
+                    }
+                }
+            }
+
+            protected function clearSearchButtonClickHandler(event:MouseEvent = null):void {
+                selectedItem = null;
+                searchPosition = 0;
+                searchBoxInput.text = null;
+            }
+
+            protected function searchTreeChangeHandler(event:TextOperationEvent):void {
+                searchPosition = 0;
+                selectedItem = null;
+                findNextMatch(searchBoxInput.text);
+            }
+
+            private function findNextMatch(searchString:String):void {
+                var startingSelectedItem:Object = selectedItem;
+
+                for (var i:int = searchPosition; i < flatTree.length; i++) {
+                    var o:Object = flatTree.getItemAt(i);
+
+                    if (searchRow(o, searchString)) {
+                        selectedItem = o;
+                        searchPosition = i;
+                        compTree.scrollToIndex(searchPosition);
+                        break;
+                    }
+                }
+
+                if (selectedItem != null && selectedItem == startingSelectedItem) {
+                    alertDialog.alertMessage = "No more matches found.";
+                    alertDialog.visible = true;
+                }
+            }
+
+            private function searchRow(o:Object, searchString:String):Boolean {
+                if ((o.name as String).toUpperCase().indexOf(searchString.toUpperCase()) != -1) {
+                    return true;
+                }
+                return false;
+            }
+
+
+            protected function nextSearchClickHandler(event:MouseEvent):void {
+                searchPosition++;
+                findNextMatch(searchBoxInput.text);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:HGroup top="5"
+              left="5">
+        <s:Button label="Refresh"
+                  click="refresh(event)"
+                  enabled="{model.isConnected}"/>
+        <s:Button label="Expand All"
+                  click="expandAllClickHandler(event)"/>
+        <mx:Spacer width="100%"/>
+    </s:HGroup>
+
+    <s:Group top="5"
+             right="5">
+        <components:AdvancedTextInput id="searchBoxInput"
+                                      promptText="Search"
+                                      width="200"
+                                      right="80"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.AdvancedTextInputSkin"
+                                      change="searchTreeChangeHandler(event)"/>
+        <s:Button click="clearSearchButtonClickHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.SimpleXButtonSkin"
+                  right="80"
+                  top="1"/>
+        <s:Button label="Next"
+                  right="5"
+                  click="nextSearchClickHandler(event)"/>
+    </s:Group>
+
+    <mx:Tree id="compTree"
+             dataProvider="{model.applicationAutomationTreeData}"
+             selectedItem="@{selectedItem}"
+             labelField="name"
+             left="5"
+             right="195"
+             top="30"
+             bottom="5"
+             showRoot="false"
+             borderColor="#000000"
+             borderAlpha="1"
+             borderVisible="true"/>
+
+    <s:Group top="30"
+             bottom="5"
+             right="5"
+             width="185">
+
+        <s:Rect left="0"
+                right="0"
+                top="0"
+                bottom="0">
+            <s:fill>
+                <s:LinearGradient rotation="90">
+                    <s:GradientEntry color="#ffffff"
+                                     alpha="1"/>
+                    <s:GradientEntry color="#ffffff"
+                                     alpha=".5"/>
+                </s:LinearGradient>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke color="#000000"/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:Group top="0"
+                 left="0"
+                 right="0"
+                 height="45">
+            <s:Rect left="0"
+                    right="0"
+                    top="0"
+                    bottom="0">
+                <s:fill>
+                    <s:SolidColor color="#000000"/>
+                </s:fill>
+            </s:Rect>
+
+            <s:Label text="Component Details"
+                     color="#ffffff"
+                     fontWeight="bold"
+                     maxDisplayedLines="2"
+                     width="100"
+                     textAlign="center"
+                     verticalCenter="0"
+                     horizontalCenter="0"/>
+        </s:Group>
+
+        <s:Group top="50"
+                 bottom="0"
+                 left="0"
+                 right="0"
+                 visible="{selectedItem != null}">
+            <s:layout>
+                <s:VerticalLayout paddingTop="5"
+                                  paddingBottom="5"
+                                  paddingRight="5"
+                                  paddingLeft="5"/>
+            </s:layout>
+
+            <s:Label text="Name: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.name}"
+                     fontSize="10"/>
+
+            <s:Label text="Id: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.id}"
+                     fontSize="10"/>
+
+            <s:Label text="Automation Name: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.automationName}"
+                     fontSize="10"/>
+
+            <s:Label text="Automation Class: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.automationClass}"
+                     fontSize="10"/>
+
+            <s:Label text="Automation Owner: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.automationOwner}"
+                     fontSize="10"/>
+
+            <s:Label text="Parent: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.parent}"
+                     fontSize="10"/>
+
+            <s:Label text="Number of Automation Children: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.numAutomationChildren}"
+                     fontSize="10"/>
+
+            <s:Label text="Text: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.text}"
+                     fontSize="10"/>
+
+            <s:Label text="Label: "
+                     fontWeight="bold"
+                     fontSize="10"/>
+            <s:Label maxDisplayedLines="-1"
+                     width="175"
+                     text="{selectedItem.label}"
+                     fontSize="10"/>
+        </s:Group>
+    </s:Group>
+
+    <forms:AlertDialog id="alertDialog"
+                       visible="false"/>
+    <forms:AlertDialog id="notConnectedMessage"
+                       alertMessage="FlexMonkey must be connected to your application before you can view the automation component tree."
+                       showClose="false"
+                       visible="{!model.isConnected}"/>
+
+</s:Window>

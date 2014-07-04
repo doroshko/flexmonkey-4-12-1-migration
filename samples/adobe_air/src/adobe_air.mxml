@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx">
+
+	<fx:Script>
+		<![CDATA[
+			
+			protected function button1_clickHandler(event:MouseEvent):void {
+				textArea.text = null;	
+				textArea2.text = null;
+			}
+
+			protected function button2_clickHandler(event:MouseEvent):void {
+				textArea2.text = textArea.text;
+			}
+
+		]]>
+	</fx:Script>
+	
+	<s:TextArea id="textArea" top="5" left="5" right="5" height="100" />
+	<s:TextArea id="textArea2" top="115" left="5" right="5" height="100" editable="false" />
+	<s:HGroup top="230" horizontalCenter="0">
+		<s:Button label="Copy"
+				  click="button2_clickHandler(event)" />			
+		<s:Button label="Clear"
+				  click="button1_clickHandler(event)" />					
+	</s:HGroup>
+
+</s:WindowedApplication>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="FlexMonkey :: Status and News">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.StatusCheckEvent;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.collections.ArrayCollection;
+
+            [Bindable] private var versionDoesNotMatchVisible:Boolean = true;
+            [Bindable] private var currentInstalledVersion:String;
+            [Bindable] private var latestVersionAvailable:String;
+            [Bindable] private var newsItems:ArrayCollection;
+
+            public function setup(currentInstalledVersion:String,
+                                  latestVersionAvailable:String,
+                                  newsCol:ArrayCollection):void {
+                this.newsItems = newsCol;
+                trace("this.newsItems.length: " + this.newsItems.length);
+
+                if (currentInstalledVersion != latestVersionAvailable) {
+                    this.currentInstalledVersion = currentInstalledVersion;
+                    this.latestVersionAvailable = latestVersionAvailable;
+                } else {
+                    versionDoesNotMatchVisible = false;
+                }
+            }
+
+            override public function closeClickHander(evetn:MouseEvent):void {
+                closePopup();
+            }
+
+            private function acknowledgedAndCloseHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new StatusCheckEvent(StatusCheckEvent.ACKNOWLEDGE_STATUSES));
+                closePopup();
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Group left="10"
+             right="10"
+             bottom="10"
+             top="10">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"/>
+        </s:layout>
+
+        <s:Label width="100%"
+                 maxWidth="450"
+                 maxDisplayedLines="-1"
+                 fontStyle="italic"
+                 text="The version of FlexMonkey you have installed is not the current release."
+                 visible="{versionDoesNotMatchVisible}"
+                 includeInLayout="{versionDoesNotMatchVisible}"/>
+
+        <s:Label width="100%"
+                 maxWidth="450"
+                 maxDisplayedLines="-1"
+                 fontStyle="italic"
+                 text="Your version: {currentInstalledVersion}."
+                 visible="{versionDoesNotMatchVisible}"
+                 includeInLayout="{versionDoesNotMatchVisible}"/>
+
+        <s:Label width="100%"
+                 maxWidth="450"
+                 maxDisplayedLines="-1"
+                 fontStyle="italic"
+                 text="Current Version: {latestVersionAvailable}"
+                 paddingBottom="12"
+                 visible="{versionDoesNotMatchVisible}"
+                 includeInLayout="{versionDoesNotMatchVisible}"/>
+
+        <s:Label text="FlexMonkey News"
+                 textAlign="left"
+                 width="100%"
+                 fontWeight="bold"
+                 includeInLayout="{this.newsItems != null &amp;&amp; this.newsItems.length > 0}"
+                 visible="{this.newsItems != null &amp;&amp; this.newsItems.length > 0}"/>
+
+        <s:List dataProvider="{this.newsItems}"
+                width="450"
+                height="300"
+                itemRenderer="com.gorillalogic.flexmonkey.views.renderers.NewsItemItemRenderer"
+                includeInLayout="{this.newsItems != null &amp;&amp; this.newsItems.length > 0}"
+                visible="{this.newsItems != null &amp;&amp; this.newsItems.length > 0}">
+            <s:layout>
+                <s:VerticalLayout variableRowHeight="true"/>
+            </s:layout>
+        </s:List>
+
+        <s:Button label="Acknowledged and Close"
+                  horizontalCenter="0"
+                  click="acknowledgedAndCloseHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+
+        <s:Button label="Close"
+                  horizontalCenter="0"
+                  click="closeClickHander(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+    </s:Group>
+
+</containers:FMPopup>

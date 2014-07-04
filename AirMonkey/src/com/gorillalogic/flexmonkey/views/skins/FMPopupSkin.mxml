@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+        alpha.disabled="0.5"
+        xmlns:mx="library://ns.adobe.com/flex/mx"
+        xmlns:components="com.gorillalogic.flexmonkey.views.components.*">
+
+    <fx:Metadata>[HostComponent("com.gorillalogic.flexmonkey.views.containers.FMPopup")]</fx:Metadata>
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.utils.Assets;
+        ]]>
+    </fx:Script>
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="disabled"/>
+    </s:states>
+
+    <s:Rect left="0"
+            right="0"
+            top="0"
+            bottom="0">
+        <s:fill>
+            <s:SolidColor color="#999999"
+                          alpha="0.6"/>
+        </s:fill>
+    </s:Rect>
+
+    <s:Group horizontalCenter="0"
+             verticalCenter="0">
+        <s:Rect left="0"
+                right="0"
+                top="0"
+                bottom="0"
+                radiusX="4">
+            <s:fill>
+                <s:SolidColor color="#ffffff"/>
+            </s:fill>
+            <s:filters>
+                <s:GlowFilter color="#ffffff"
+                              blurX="16"
+                              blurY="16"
+                              alpha="1"/>
+            </s:filters>
+        </s:Rect>
+
+        <s:Group id="masker"
+                 left="0"
+                 right="0"
+                 top="0"
+                 bottom="0">
+            <s:Rect left="0"
+                    right="0"
+                    top="0"
+                    bottom="0"
+                    radiusX="4">
+                <s:fill>
+                    <s:SolidColor color="#ffffff"/>
+                </s:fill>
+            </s:Rect>
+        </s:Group>
+
+        <s:Rect left="0"
+                right="0"
+                top="0"
+                height="36"
+                mask="{masker}">
+            <s:fill>
+                <s:SolidColor color="#cccccc"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:Rect left="0"
+                right="0"
+                top="0"
+                bottom="0"
+                radiusX="4">
+            <s:stroke>
+                <s:SolidColorStroke color="#666666"/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:Rect left="0"
+                right="0"
+                top="35"
+                height="1">
+            <s:fill>
+                <s:SolidColor color="#666666"/>
+            </s:fill>
+        </s:Rect>
+
+
+        <s:HGroup left="8"
+                  right="8"
+                  top="0"
+                  height="36"
+                  verticalAlign="middle">
+            <mx:Image id="titleImage"
+                      source="{hostComponent.titleImageSource}"/>
+            <s:Label id="titleLabel"
+                     color="{hostComponent.titleColor}"
+                     fontWeight="bold"
+                     fontSize="14"
+                     maxWidth="{hostComponent.width-150}"
+                     maxDisplayedLines="1"
+                     text="{hostComponent.title}"/>
+
+            <mx:Spacer width="100%"/>
+
+            <s:Button id="closeButton"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.XButtonSkin"
+                      right="8"
+                      top="8"
+                      visible="{ hostComponent.showClose}"
+                      includeInLayout="{ hostComponent.showClose}"
+                      click="{hostComponent.closeClickHander(event) }"/>
+        </s:HGroup>
+
+        <s:Group id="contentGroup"
+                 left="8"
+                 right="8"
+                 top="42"
+                 bottom="{ (hostComponent.monkeyRunnable != null &amp;&amp; hostComponent.showBottomNav ) ? 34 : 10 }"
+                 minWidth="0"
+                 minHeight="0">
+            <s:layout>
+                <s:BasicLayout/>
+            </s:layout>
+        </s:Group>
+
+        <s:HGroup bottom="8"
+                  horizontalCenter="0"
+                  verticalAlign="middle"
+                  visible="{ hostComponent.monkeyRunnable != null &amp;&amp; hostComponent.showBottomNav }"
+                  includeInLayout="{ hostComponent.monkeyRunnable != null &amp;&amp; hostComponent.showBottomNav }">
+            <s:Button id="deleteButton"
+                      toolTip="Delete Command"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.TrashCanSkin"
+                      click="{hostComponent.deleteButtonClickHandler(event) }"/>
+
+            <s:Button label="Close"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"
+                      click="{ hostComponent.closeClickHander(event) } "/>
+
+            <components:PlayPauseButton id="playPauseButton"
+                                        toolTip="Play Command"
+                                        width="20"
+                                        height="20"
+                                        click="{hostComponent.playPauseButtonClickHandler(event)}"/>
+        </s:HGroup>
+
+    </s:Group>
+
+</s:Skin>

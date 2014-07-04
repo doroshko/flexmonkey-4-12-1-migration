@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 title="RichText Sample" width="100%" height="100%">
+	
+	<s:layout>
+		<s:HorizontalLayout paddingLeft="8" paddingRight="8" paddingTop="8"/>
+	</s:layout>
+	
+	<s:Group left="10" right="10" top="10" bottom="10">
+		<s:RichText x="0" y="0" width="75" fontFamily="Times" fontSize="15" textRotation="rotate90">
+			<s:content>Hello World!</s:content>
+		</s:RichText>
+		
+		<s:Group x="100" y="0">
+			<s:RichText width="100" textAlign="justify" paddingTop="5" paddingLeft="5" paddingRight="5" paddingBottom="5">
+				<s:content>Hello World! This is a justified paragraph of text in a RichText control. It has a border around it drawn by a Rect inside a Group.</s:content>
+			</s:RichText>
+			<s:Rect width="100%" height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="blue"/>
+				</s:stroke>
+			</s:Rect>
+		</s:Group>
+		
+		<s:Group x="225" y="0" >
+			<s:RichText width="140" height="120" columnCount="2" columnGap="10">
+				<s:content><s:span fontWeight="bold">Hello World!</s:span> This is a paragraph of text in 2 columns. It is about 20 words long, which should be enough to cause a few line breaks.</s:content>
+			</s:RichText>
+			<s:Rect width="100%" height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="blue"/>
+				</s:stroke>
+			</s:Rect>
+		</s:Group>
+	</s:Group>
+	<s:Label width="270" color="0x323232" text="RichText is a low-level UIComponent that can display one or more lines of richly-formatted text and embedded images. For performance reasons, it does not support scrolling, selection, editing, clickable hyperlinks, or images loaded from URLs. If you need those capabilities, see the RichEditableText class."/>
+</s:Panel>

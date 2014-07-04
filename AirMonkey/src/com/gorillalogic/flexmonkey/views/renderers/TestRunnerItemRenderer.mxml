@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:mx="library://ns.adobe.com/flex/mx"
+                xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+                width="100%"
+                height="24"
+                click="clickHandler(event)"
+                autoDrawBackground="false">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyNode;
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.core.MonkeyTest;
+            import com.gorillalogic.flexmonkey.core.MonkeyTestCase;
+            import com.gorillalogic.flexmonkey.core.MonkeyTestSuite;
+            import com.gorillalogic.flexmonkey.events.PayloadEvent;
+            import com.gorillalogic.flexmonkey.model.RunnerModel;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+
+            import mx.binding.utils.ChangeWatcher;
+            import mx.events.FlexEvent;
+
+            [Bindable] private var myState:String;
+            [Bindable] private var leftPad:int;
+            [Bindable] private var textLeftPad:int;
+            [Bindable] private var bgColor:uint = 0xeeeeee;
+            [Bindable] private var fontColor:uint = 0x000000;
+
+            [Bindable] private var desc:String;
+            [Bindable] private var monkeyRunnable:MonkeyRunnable;
+            [Bindable] private var isNotMonkeyNode:Boolean = false;
+
+            override public function set data(value:Object):void {
+                monkeyRunnable = value as MonkeyRunnable;
+
+                if (monkeyRunnable != null) {
+                    if (monkeyRunnable is MonkeyNode) {
+                        isNotMonkeyNode = false;
+                        desc = (monkeyRunnable as MonkeyNode).name;
+                        textLeftPad = 21;
+
+                        if (monkeyRunnable is MonkeyTestSuite) {
+                            myState = "suite";
+                        } else if (monkeyRunnable is MonkeyTestCase) {
+                            myState = "case";
+                        } else if (monkeyRunnable is MonkeyTest) {
+                            myState = "test";
+                        }
+                    } else {
+                        isNotMonkeyNode = true;
+                        desc = (monkeyRunnable as MonkeyRunnable).getLabel();
+                        myState = "item";
+                        textLeftPad = 5;
+                    }
+
+                    leftPad = (monkeyRunnable.runNestedCount * 10) + 1.5;
+
+                    ChangeWatcher.watch(monkeyRunnable, "runState", updateItemState);
+                    updateItemState();
+                }
+            }
+
+            private function updateItemState(event:Event = null):void {
+                if (monkeyRunnable != null && monkeyRunnable.runState == "running") {
+                    bgColor = 0xefefef;
+                } else {
+                    bgColor = 0xcccccc;
+                }
+            }
+
+            protected function clickHandler(event:MouseEvent):void {
+                dispatchEvent(new PayloadEvent("selectItemResult", monkeyRunnable, true));
+            }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="hovered"/>
+        <s:State name="selected"/>
+    </s:states>
+
+    <s:Group bottom="1.5"
+             left="{ leftPad }"
+             right="1.5"
+             top="1.5">
+
+        <s:Rect bottom="0"
+                left="0"
+                right="0"
+                top="0"
+                radiusX="3">
+            <s:fill>
+                <s:SolidColor color="{ bgColor }"/>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke color="#000000"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:Rect bottom="0"
+                left="0"
+                right="0"
+                top="0"
+                radiusX="3">
+            <s:fill>
+                <s:SolidColor color="#000000"
+                              color.hovered="#ffffff"
+                              alpha.normal="0"
+                              alpha.selected=".25"
+                              alpha.hovered=".5"/>
+            </s:fill>
+        </s:Rect>
+
+
+        <!-- icons -->
+        <mx:Image width="14"
+                  height="14"
+                  source="{Assets.suiteImageClass}"
+                  left="3"
+                  top="3"
+                  visible="{ myState == 'suite' }"/>
+        <mx:Image width="14"
+                  height="14"
+                  source="{Assets.caseImageClass}"
+                  left="3"
+                  top="4"
+                  visible="{ myState == 'case' }"/>
+        <mx:Image width="14"
+                  height="14"
+                  source="{Assets.testImageClass}"
+                  left="3"
+                  top="4"
+                  visible="{ myState == 'test' }"/>
+
+
+        <s:Label width="80%"
+                 text="{ desc }"
+                 fontSize="10"
+                 fontWeight="bold"
+                 left="{ textLeftPad }"
+                 top="6.5"
+                 maxDisplayedLines="1"
+                 alpha="{monkeyRunnable.runState == 'ignored' ? .5 : 1}"
+                 color="{monkeyRunnable.runState == 'ignored' ? 0x000000 : 0x000000}"/>
+
+        <components:FailureIcon width="13"
+                                height="13"
+                                right="8"
+                                verticalCenter="0"
+                                visible="{ monkeyRunnable.runState == 'failure' }"/>
+        <components:ErrorIcon width="13"
+                              height="13"
+                              right="8"
+                              verticalCenter="0"
+                              visible="{ monkeyRunnable.runState == 'error' }"/>
+        <components:SuccessIcon width="14"
+                                height="14"
+                                right="8"
+                                verticalCenter="0"
+                                visible="{ monkeyRunnable.runState == 'success' }"/>
+        <components:RetryStateIcon width="60"
+                                   height="16"
+                                   right="7"
+                                   verticalCenter="0"
+                                   visible="{ monkeyRunnable.runState == 'running' &amp;&amp; isNotMonkeyNode }"
+                                   current="{ monkeyRunnable.currentRetryCount }"
+                                   total="{ monkeyRunnable.attempts }"/>
+        <components:PausingIcon width="60"
+                                height="16"
+                                right="7"
+                                verticalCenter="0"
+                                visible="{ monkeyRunnable.runState == 'pausing' &amp;&amp; isNotMonkeyNode }"/>
+        <components:IgnoredIcon width="50"
+                                height="15"
+                                right="7"
+                                verticalCenter="0"
+                                visible="{ monkeyRunnable.runState == 'ignored'}"/>
+
+    </s:Group>
+
+
+</s:ItemRenderer>

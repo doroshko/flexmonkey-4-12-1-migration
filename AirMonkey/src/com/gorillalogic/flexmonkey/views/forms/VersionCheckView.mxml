@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    creationComplete="create(event)"
+                    title="Compare Console and MonkeyLibrary Versions">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.monkeylink.MonkeyLink;
+            import com.gorillalogic.monkeylink.MonkeyLinkConsoleConnectionController;
+
+            import mx.events.FlexEvent;
+
+            [Bindable] public var consoleVersion:String;
+            [Bindable] public var monkeyLinkVersion:String;
+
+            protected function create(event:FlexEvent):void {
+                var appDescriptor:XML = NativeApplication.nativeApplication.applicationDescriptor;
+                var ns:Namespace = appDescriptor.namespace();
+                consoleVersion = appDescriptor.ns::versionNumber;
+				if (consoleVersion == null || consoleVersion.length<1) {
+					consoleVersion = appDescriptor.ns::version;
+				}
+
+                refreshLinkVersion();
+            }
+
+            protected function refreshLinkVersion(event:Event = null):void {
+                MonkeyLinkConsoleConnectionController.instance.requestMonkeyLinkVersionNumber(linkVersionNumberHandler);
+            }
+
+            protected function linkVersionNumberHandler(value:String):void {
+                monkeyLinkVersion = value;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Group left="20"
+             right="20"
+             bottom="10"
+             top="20">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label text="FlexMonkey AIR Console Version: {consoleVersion}"
+                 fontSize="18"
+                 textAlign="center"
+                 width="400"
+                 maxDisplayedLines="-1"
+                 fontWeight="bold"
+                 color="#376607"/>
+
+        <s:Label text="Connected Application's FlexMonkey Library Version: {monkeyLinkVersion}"
+                 fontSize="18"
+                 textAlign="center"
+                 width="400"
+                 maxDisplayedLines="-1"
+                 fontWeight="bold"
+                 color="#376607"/>
+
+        <s:HGroup horizontalCenter="0">
+            <s:Button label="Refresh"
+                      click="refreshLinkVersion(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+
+            <s:Button label="Ok"
+                      click="closeClickHander(event);"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+        </s:HGroup>
+    </s:Group>
+
+</containers:FMPopup>

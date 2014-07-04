@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+                    xmlns:views="com.gorillalogic.flexmonkey.application.UI.views.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    creationComplete="create()"
+                    title="Edit Verify: { verifyMonkeyCommand.description }"
+                    title.newMonkeyRunnable="Select Component for Verification"
+                    title.spyProperties="Select Properties for Verification"
+                    titleImageSource="{ Assets.verifyImageClass }"
+                    monkeyRunnable="{this.verifyMonkeyCommand}">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.events.PayloadEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.utils.FMMessageConstants;
+            import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.binding.utils.ChangeWatcher;
+            import mx.events.PropertyChangeEvent;
+
+            private var _verifyMonkeyCommand:VerifyMonkeyCommand;
+            [Bindable] public var isNewVerify:Boolean = false;
+            [Bindable] private var verifyMonkeyCommandHasTarget:Boolean;
+
+            private function create():void {
+                this.addEventListener("removePropertyVerficationItem", removePropertyVerficationItemHandler);
+            }
+
+            [Bindable] public function get verifyMonkeyCommand():VerifyMonkeyCommand {
+                return _verifyMonkeyCommand;
+            }
+
+            public function set verifyMonkeyCommand(value:VerifyMonkeyCommand):void {
+                this._verifyMonkeyCommand = value;
+
+                if (_verifyMonkeyCommand != null) {
+                    _verifyMonkeyCommand.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, verifyUpdated);
+                }
+            }
+
+            protected function verifyUpdated(event:Event):void {
+                if (verifyMonkeyCommand.parent != null) {
+                    ApplicationModel.instance.isMonkeyTestFileDirty = true;
+                }
+            }
+
+            private function removePropertyVerficationItemHandler(event:PayloadEvent):void {
+                verifyMonkeyCommand.attributes.removeItemAt(verifyMonkeyCommand.attributes.getItemIndex(event.data));
+            }
+
+            private function closeDisplaySnapshotClickHandler(event:MouseEvent):void {
+                this.currentState = "base";
+            }
+
+            private function showSnapshotWindowHandler(event:MouseEvent):void {
+                this.currentState = "baseDisplaySnapshot";
+                verifyMonkeyCommand.loadSnapshot();
+            }
+
+            private function verifyBitmapClickHandler():void {
+                verifyMonkeyCommand.verifyBitmap = bitmapCheckbox.selected;
+            }
+
+            private function cancelCreationClickHandler(event:Event):void {
+                if (currentState == "newMonkeyRunnable" || currentState == "spyPropertiesMonkium") {
+                    FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.CANCEL_COMPONENT_SELECTION));
+                }
+                closePopup();
+            }
+
+            protected function spyPropertyViewCloseHandler(event:Event):void {
+				if (currentState == "spyPropertiesMonkium") {
+					FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.CANCEL_COMPONENT_SELECTION));
+					return;
+				}
+                this.currentState = "base";
+            }
+
+            private function retakeExpectedSnapshotHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.RETAKE_VERIFY_SNAPSHOT, verifyMonkeyCommand));
+            }
+
+            private function showSpyWindowHandler(event:MouseEvent):void {
+                this.currentState = "spyProperties";
+                isNewVerify = false;
+                FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.LOAD_COMPONENT_SELECTION, verifyMonkeyCommand));
+            }
+
+            protected function cancelRetakeSnapshotClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.CANCEL_RETAKE_VERIFY_SNAPSHOT));
+            }
+        ]]>
+    </fx:Script>
+
+
+    <containers:states>
+        <s:State name="base"/>
+        <s:State name="newMonkeyRunnable"/>
+        <s:State name="baseEditSnapshot"/>
+        <s:State name="spyProperties"/>	
+		<s:State name="spyPropertiesMonkium"/>			
+        <s:State name="baseDisplaySnapshot"/>
+    </containers:states>
+
+
+    <!-- main verify edit display -->
+    <s:Group width="650"
+             maxHeight="650"
+             maxWidth="750"
+             bottom="0"
+             left="0"
+             right="0"
+             top="0"
+             includeIn="base">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"/>
+        </s:layout>
+
+        <!-- header navigation -->
+        <s:HGroup id="buttonBox"
+                  width="100%"
+                  horizontalAlign="right">
+
+            <s:Button label="Property Selection"
+                      enabled="{ ApplicationModel.instance.isConnected }"
+                      toolTip="Show Component Properties Selection Window"
+                      click="showSpyWindowHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+
+            <s:Button label="New Snapshot"
+                      enabled="{ ApplicationModel.instance.isConnected }"
+                      toolTip="Capture New Snapshot Bitmap"
+                      click="retakeExpectedSnapshotHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+
+            <s:Button label="Show Snapshot"
+                      toolTip="Show Existing Snapshot Bitmap"
+                      click="showSnapshotWindowHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+        </s:HGroup>
+
+
+        <mx:Form id="verifyForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+            <mx:FormItem width="100%"
+                         label="Description"
+                         labelWidth="135">
+                <mx:TextInput id="verifyDescriptionFormItem"
+                              width="100%"
+                              text="@{ verifyMonkeyCommand.description }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Target Value"
+                         labelWidth="135">
+                <mx:TextInput id="verifyValueFormItem"
+                              width="100%"
+                              text="@{ verifyMonkeyCommand.value }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Target Property"
+                         labelWidth="135">
+                <mx:TextInput id="verifyPropFormItem"
+                              width="100%"
+                              text="@{ verifyMonkeyCommand.prop }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Container Value"
+                         labelWidth="135">
+                <mx:TextInput id="verifyContainerValueFormItem"
+                              width="100%"
+                              text="@{ verifyMonkeyCommand.containerValue }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Container Property"
+                         labelWidth="135">
+                <mx:TextInput id="verifyContainerPropFormItem"
+                              width="100%"
+                              text="@{ verifyMonkeyCommand.containerProp }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Snapshot"
+                         labelWidth="135">
+                <mx:TextInput id="snapshotURLFormItem"
+                              width="100%"
+                              text="@{ verifyMonkeyCommand.snapshotURL }"/>
+            </mx:FormItem>
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form id="retryForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+            <mx:FormItem width="100%"
+                         label="Retry Delay"
+                         labelWidth="135">
+                <mx:TextInput id="verifyDelayFormItem"
+                              width="100%"
+                              text="@{ verifyMonkeyCommand.delay }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Retry Attempts"
+                         labelWidth="135">
+                <mx:TextInput id="verifyAttemptsFormItem"
+                              width="100%"
+                              text="@{ verifyMonkeyCommand.attempts }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Total Retry Timeout"
+                         labelWidth="135">
+                <mx:TextInput id="verifyTimeoutFormItem"
+                              width="100%"
+                              text="{ verifyMonkeyCommand.timeOut }"
+                              enabled="false"
+                              editable="false"/>
+            </mx:FormItem>
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <s:HGroup width="100%"
+                  height="20"
+                  horizontalAlign="left"
+                  paddingBottom="2"
+                  verticalAlign="bottom">
+
+            <mx:Spacer width="8"/>
+            <s:CheckBox id="bitmapCheckbox"
+                        selected="{ verifyMonkeyCommand.verifyBitmap }"
+                        click="verifyBitmapClickHandler();"/>
+
+            <s:Label text="Verify Snapshot Bitmap"/>
+            <s:Label text=" -- "/>
+            <s:Label text="Fuzziness  "
+                     enabled="{ bitmapCheckbox.selected }"
+                     toolTip="Amount of fuzziness in Bitmap comparison"/>
+
+            <s:NumericStepper id="bitmapDelta"
+                              width="48"
+                              height="20"
+                              enabled="{ bitmapCheckbox.selected }"
+                              maxChars="3"
+                              maximum="256"
+                              minimum="0"
+                              stepSize="1"
+                              value="@{ verifyMonkeyCommand.verifyBitmapFuzziness }"
+                              focusThickness="0"/>
+        </s:HGroup>
+
+        <mx:HRule width="100%"/>
+
+        <s:Label text="Properties"
+                 fontSize="14"
+                 fontWeight="bold"/>
+
+        <s:List id="attributeGroup"
+                width="100%"
+                maxHeight="210"
+                dataProvider="{ verifyMonkeyCommand.attributes }"
+                itemRenderer="com.gorillalogic.flexmonkey.views.renderers.VerifyAttributeItemRenderer"
+                borderAlpha="0">
+            <s:layout>
+                <s:VerticalLayout gap="5"
+                                  requestedRowCount="{ verifyMonkeyCommand.attributes.length }"/>
+            </s:layout>
+        </s:List>
+
+    </s:Group>
+
+
+    <!-- display snapshot group -->
+    <s:Group width="650"
+             height="550"
+             maxHeight="550"
+             maxWidth="650"
+             bottom="0"
+             left="0"
+             right="0"
+             top="0"
+             includeIn="baseDisplaySnapshot">
+
+        <s:HGroup right="0">
+            <s:Button label="New Snapshot"
+                      enabled="{ ApplicationModel.instance.isConnected }"
+                      toolTip="Take new snapshot bitmap"
+                      click="retakeExpectedSnapshotHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+
+            <s:Button label="Hide Snapshot"
+                      click="closeDisplaySnapshotClickHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+        </s:HGroup>
+
+        <mx:Image id="expectedSnapshotImage"
+                  data="{ verifyMonkeyCommand.expectedSnapshot.displayPng }"
+                  maxHeight="500"
+                  maxWidth="625"
+                  horizontalCenter="0"
+                  verticalCenter="0"
+                  maintainAspectRatio="true"/>
+    </s:Group>
+
+
+    <!-- selecting component display -->
+    <s:Group width="400"
+             height="400"
+             maxHeight="400"
+             maxWidth="400"
+             bottom="20"
+             left="20"
+             right="20"
+             top="20"
+             includeIn="newMonkeyRunnable,baseEditSnapshot">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              verticalAlign="middle"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label width="400"
+                 text="{ FMMessageConstants.VERIFY_COMPONENT_SELECTION }"
+                 text.baseEditSnapshot="{ FMMessageConstants.EDIT_VERIFY_SNAPSHOT }"
+                 fontSize="18"
+                 fontWeight="bold"
+                 textAlign="center"
+                 maxDisplayedLines="-1"/>
+        <s:Button label="Cancel"
+                  click="cancelCreationClickHandler(event)"
+                  click.baseEditSnapshot="cancelRetakeSnapshotClickHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+    </s:Group>
+
+    <!-- spy property window display -->
+    <forms:VerifySpyPropertyForm id="spyPropertyView"
+                                 verify="{ verifyMonkeyCommand }"
+                                 isNewVerify="{ isNewVerify }"
+                                 cancel="cancelCreationClickHandler(event)"
+                                 close="spyPropertyViewCloseHandler(event)"
+								 okButtonLabel.spyPropertiesMonkium="Done" 
+								 okButtonLabel.spyProperties="Next" 								 
+                                 includeIn="spyProperties,spyPropertiesMonkium"/>
+
+</containers:FMPopup>

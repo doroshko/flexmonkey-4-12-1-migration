@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU General Public License, v2.
+-->
+<s:Window xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+          xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+          xmlns:project="com.gorillalogic.flexmonkey.views.project.*"
+          xmlns:viewComponents="com.gorillalogic.flexmonkey.application.UI.viewComponents.*"
+          xmlns:views="com.gorillalogic.flexmonkey.application.UI.views.*"
+          width="750"
+          height="615"
+          creationComplete="create()"
+          skinClass="com.gorillalogic.flexmonkey.views.skins.WindowSkin"
+          title="FlexMonkey :: Project Properties">
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+			import com.gorillalogic.flexmonkey.events.ProjectFilesEvent;
+			import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+			import com.gorillalogic.flexmonkey.vo.ProjectPropertiesVO;
+			import com.gorillalogic.framework.FMHub;
+			import com.gorillalogic.utils.FMMessageConstants;
+			import com.gorillalogic.flexmonkey.utils.FMFileUtils;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.utils.URLUtil;
+
+            [Bindable] public var showingWindowOnStartup:Boolean = false;
+            [Bindable] public var showSetupDialog:Boolean = false;
+
+            [Bindable] private var model:ProjectTestModel = ProjectTestModel.instance;
+
+            private function cancelClickHandler(event:MouseEvent):void {
+                this.close();
+            }
+
+            private function updateProjectProperties():void {
+                var projectProperties:ProjectPropertiesVO = this.asProjectPropertiesVO();
+                FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.PROJECT_PROPERTIES_UPDATE, projectProperties));
+            }
+
+			private function asProjectPropertiesVO():ProjectPropertiesVO {
+				var projectProperties:ProjectPropertiesVO = new ProjectPropertiesVO();
+				projectProperties.generatedCodeSourceDirectory = generatedCodeSourceDirectoryFormItem.text;
+				projectProperties.generatedCodeSuitesPackageName = generatedCodeSuitesPackageNameFormItem.text;
+				projectProperties.generatedCodeTestCaseBaseClass = generatedCodeTestCaseBaseClassFormItem.text;
+				projectProperties.codeGenTimeoutPadding = new Number(codeGenPaddingItem.text);
+				return projectProperties;
+			}
+			
+            private function okClickHandler(event:MouseEvent):void {
+				var warning:String=this.getValidationWarning();
+				if (warning !=null && warning.length>0) {
+                	var warnBox:Alert = Alert.show(warning + " Save anyway?", 
+									"Warning",
+									Alert.OK | Alert.CANCEL,
+									this,
+									updateWarningHandler);
+				} else {
+					updateAndClose();
+				}
+            }
+			
+			private function updateWarningHandler(event:CloseEvent):void {
+				if (event.detail == Alert.OK) {
+					updateAndClose();
+				}
+			}
+			
+			private function updateAndClose():void {
+				updateProjectProperties();
+				this.close();
+			}
+			
+			private function getValidationWarning():String {
+				var warning:String = null;
+				
+				// make sure we can write the generated code directory 
+				var details:String=null;
+				var generatedCodeDir:String=FMFileUtils.getFullURL(projectDirectoryInput.text,
+													this.generatedCodeSourceDirectoryFormItem.text);
+				var generatedCodeDirFile:File = new File(generatedCodeDir);
+				if (generatedCodeDirFile.exists && !(generatedCodeDirFile.isDirectory)) {
+					details = generatedCodeDirFile.toString() + " already exists, but it isn't a directory";
+				}
+				if (details !=null) {
+					warning="cannot create a directory for snapshots and generated-code at "
+						+ (new File(generatedCodeDir)).toString() + ":\n"
+						+ details + "\n"
+						+ "Until this changes, you may not be able to use verification and code generation.";
+				}
+
+				return warning;
+			}
+
+            private var generatedSourceCodeDirectory:File;
+
+            private function browseForGeneratedCodeSourceDirectoryClickHandler(event:MouseEvent):void {
+                generatedSourceCodeDirectory = new File(model.projectUrl);
+                generatedSourceCodeDirectory.browseForDirectory("Select Directory");
+                generatedSourceCodeDirectory.addEventListener(Event.SELECT, generatedSourceCodeDirectorySelectHandler, false, 0, true);
+            }
+
+            private function generatedSourceCodeDirectorySelectHandler(event:Event):void {
+                generatedCodeSourceDirectoryFormItem.text = event.target.url;
+            }
+
+            private function create():void {
+                if (showingWindowOnStartup) {
+                    showSetupDialog = true;
+
+                    alertDialog.currentState = "help";
+                    alertDialog.alertTitle = "Welcome to FlexMonkey!";
+                    alertDialog.alertMessage = "Please use the setup guide in this 'Project Properties' window to configure your Adobe Flex or AIR application to be used with FlexMonkey." +
+                        "\nYou can always get back to the 'Project Properties' by going to: Project > Properties\n";
+                    alertDialog.visible = true;
+                }
+            }
+
+            protected function hideShowSetupButton_clickHandler(event:MouseEvent):void {
+                showSetupDialog = showSetupDialog ? false : true;
+            }
+
+            protected function helpClickHandlerSourceDirectory(event:Event):void {
+                alertDialog.currentState = "help";
+                alertDialog.alertTitle = FMMessageConstants.FLEXMONKEY_HELP_STG;
+                alertDialog.alertMessage = FMMessageConstants.SOURCE_DIRECTORY_HELP;
+                alertDialog.visible = true;
+            }
+
+            protected function helpClickHandlerPackageName(event:Event):void {
+                alertDialog.currentState = "help";
+                alertDialog.alertTitle = FMMessageConstants.FLEXMONKEY_HELP_STG;
+                alertDialog.alertMessage = FMMessageConstants.PACKAGE_NAME_HELP;
+                alertDialog.visible = true;
+            }
+
+			protected function helpClickHandlerTestCaseBaseClass(event:Event):void {
+				alertDialog.currentState = "help";
+				alertDialog.alertTitle = FMMessageConstants.FLEXMONKEY_HELP_STG;
+				alertDialog.alertMessage = FMMessageConstants.TESTCASE_BASE_CLASS_HELP;
+				alertDialog.visible = true;
+			}
+			
+            protected function helpClickHandlerMultipleFiles(event:Event):void {
+                alertDialog.currentState = "help";
+                alertDialog.alertTitle = FMMessageConstants.FLEXMONKEY_HELP_STG;
+                alertDialog.alertMessage = FMMessageConstants.USE_MULTIPLE_SUITE_FILES_HELP;
+                alertDialog.visible = true;
+            }
+
+            protected function helpClickCodeGenTimeoutPadding(event:Event):void {
+                alertDialog.currentState = "help";
+                alertDialog.alertTitle = FMMessageConstants.FLEXMONKEY_HELP_STG;
+                alertDialog.alertMessage = FMMessageConstants.CODE_GEN_TIMEOUT_PADDING;
+                alertDialog.visible = true;
+            }
+
+            protected function helpClickHandlerProjectDirectory(event:Event):void {
+                alertDialog.currentState = "help";
+                alertDialog.alertTitle = FMMessageConstants.FLEXMONKEY_HELP_STG;
+                alertDialog.alertMessage = FMMessageConstants.PROJECT_DIRECTORY_HELP;
+                alertDialog.visible = true;
+            }
+
+            protected function browseForProjectDirectory_clickHandler(event:MouseEvent):void {
+                if (model.projectFileUrl == null || model.projectFileUrl.length <= 0) {
+                    FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.NEW_PROJECT));
+                } else {
+                    FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.OPEN_PROJECT));
+                }
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:VGroup bottom="10"
+              left="5"
+              right="5"
+              top="10">
+
+        <s:Label width="100%"
+                 text="Project Configuration"
+                 color="#eeeeee"
+                 fontSize="15"
+                 textAlign="center"/>
+
+        <mx:VBox width="100%"
+                 verticalScrollPolicy="off"
+                 verticalGap="0">
+
+            <mx:Form id="projectPropertiesForm"
+                     width="100%"
+                     paddingBottom="0"
+                     paddingLeft="0"
+                     paddingRight="0"
+                     paddingTop="0"
+                     verticalGap="2">
+
+
+                <mx:FormItem id="projectDirectoryFormItem"
+                             width="100%"
+                             label="Project Directory"
+                             color="#eeeeee"
+                             direction="horizontal"
+                             toolTip="{ FMMessageConstants.PROJECT_DIRECTORY_HELP }"
+                             paddingTop="5">
+                    <mx:TextInput id="projectDirectoryInput"
+                                  width="400"
+                                  text="{ model.projectUrl }"
+                                  color="#000000"
+                                  enabled="{ model.projectUrl != null }"
+                                  toolTip="{ FMMessageConstants.PROJECT_DIRECTORY_HELP }"
+                                  editable="false"/>
+                    <mx:Button id="browseForProjectDirectory"
+                               label="Browse"
+                               color="#000000"
+                               click="browseForProjectDirectory_clickHandler(event)"/>
+                    <mx:LinkButton label="Help"
+                                   color="#ffffff"
+                                   fontWeight="bold"
+                                   click="helpClickHandlerProjectDirectory(event);"/>
+                </mx:FormItem>
+
+                <mx:FormItem width="100%"
+                             label="Output Source Directory"
+                             color="#eeeeee"
+                             direction="horizontal"
+                             toolTip="{ FMMessageConstants.SOURCE_DIRECTORY_HELP }"
+                             paddingBottom="5"
+                             paddingTop="5">
+                    <mx:TextInput id="generatedCodeSourceDirectoryFormItem"
+                                  width="400"
+                                  text="{ model.generatedCodeUrlRelative }"
+                                  color="#000000"
+                                  enabled="{ model.projectUrl != null }"
+                                  toolTip="{ FMMessageConstants.SOURCE_DIRECTORY_HELP }"
+                                  editable="false"/>
+                    <mx:Button id="browseForGeneratedCodeSourceDirectoryButton"
+                               label="Browse"
+                               color="#000000"
+                               enabled="{ model.projectUrl != null }"
+                               click="browseForGeneratedCodeSourceDirectoryClickHandler(event)"/>
+                    <mx:LinkButton label="Help"
+                                   color="#ffffff"
+                                   fontWeight="bold"
+                                   click="helpClickHandlerSourceDirectory(event);"/>
+                </mx:FormItem>
+
+                <mx:FormItem width="100%"
+                             label="Suites Package Name"
+                             color="#eeeeee"
+                             direction="horizontal"
+                             toolTip="{ FMMessageConstants.PACKAGE_NAME_HELP }"
+                             paddingBottom="4">
+                    <mx:TextInput id="generatedCodeSuitesPackageNameFormItem"
+                                  width="250"
+                                  text="{ model.generatedCodeSuitesPackageName }"
+                                  color="#000000"
+                                  enabled="{ model.projectUrl != null }"
+								  toolTip="{ FMMessageConstants.PACKAGE_NAME_HELP }"/>
+                    <mx:LinkButton label="Help"
+                                   color="#ffffff"
+                                   fontWeight="bold"
+								   click="helpClickHandlerPackageName(event)"/>
+                </mx:FormItem>
+
+				<mx:FormItem width="100%"
+							 label="TestCase Base Class"
+							 color="#eeeeee"
+							 direction="horizontal"
+							 toolTip="{ FMMessageConstants.TESTCASE_BASE_CLASS_HELP }"
+							 paddingBottom="4">
+					<mx:TextInput id="generatedCodeTestCaseBaseClassFormItem"
+								  width="250"
+								  text="{ model.generatedCodeTestCaseBaseClass }"
+								  color="#000000"
+								  enabled="{ model.projectUrl != null }"
+								  toolTip="{ FMMessageConstants.TESTCASE_BASE_CLASS_HELP }"/>
+					<mx:LinkButton label="Help"
+								   color="#ffffff"
+								   fontWeight="bold"
+								   click="helpClickHandlerTestCaseBaseClass(event)"/>
+				</mx:FormItem>
+				
+                <mx:FormItem width="100%"
+                             label="Use Multiple Suite Files"
+                             color="#eeeeee"
+                             direction="horizontal"
+                             toolTip="{ FMMessageConstants.USE_MULTIPLE_SUITE_FILES_HELP }"
+                             paddingBottom="4">
+                    <s:CheckBox selected="@{ model.useMultipleSuiteFiles }"
+                                toolTip="{ FMMessageConstants.USE_MULTIPLE_SUITE_FILES_HELP }"/>
+                    <mx:LinkButton label="Help"
+                                   color="#ffffff"
+                                   fontWeight="bold"
+                                   click="helpClickHandlerMultipleFiles(event)"/>
+                </mx:FormItem>
+
+                <mx:FormItem width="100%"
+                             label="Code Gen Timeout Padding"
+                             color="#eeeeee"
+                             direction="horizontal"
+                             toolTip="{ FMMessageConstants.CODE_GEN_TIMEOUT_PADDING }"
+                             paddingBottom="4">
+
+                    <mx:TextInput id="codeGenPaddingItem"
+                                  width="250"
+                                  text="{ model.codeGenTimeoutPadding }"
+                                  color="#000000"
+                                  enabled="{ model.projectUrl != null }"
+                                  toolTip="{ FMMessageConstants.CODE_GEN_TIMEOUT_PADDING }"
+                                  restrict="0-9"/>
+
+                    <mx:LinkButton label="Help"
+                                   color="#ffffff"
+                                   fontWeight="bold"
+                                   click="helpClickCodeGenTimeoutPadding(event)"/>
+                </mx:FormItem>
+
+            </mx:Form>
+
+            <mx:HBox width="100%"
+                     horizontalAlign="right"
+                     paddingBottom="4"
+                     paddingLeft="0"
+                     paddingRight="0"
+                     paddingTop="0">
+                <mx:Button id="cancelButton"
+                           label="Cancel"
+                           enabled="{ model.projectFileUrl != null }"
+                           click="cancelClickHandler(event)"/>
+                <mx:Button id="okButton"
+                           label="OK"
+                           enabled="{ model.projectFileUrl != null }"
+                           click="okClickHandler(event)"/>
+            </mx:HBox>
+        </mx:VBox>
+
+        <s:Line width="100%">
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="2"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Group width="100%">
+            <s:Rect bottom="0"
+                    left="0"
+                    right="0"
+                    top="0"
+                    radiusX="6">
+                <s:fill>
+                    <s:SolidColor color="#999999"/>
+                </s:fill>
+            </s:Rect>
+            <s:Rect bottom="0"
+                    left="0"
+                    right="0"
+                    top="0">
+                <s:fill>
+                    <s:LinearGradient rotation="90">
+                        <s:GradientEntry color="#ffffff"
+                                         alpha="1"/>
+                        <s:GradientEntry color="#ffffff"
+                                         alpha="0"/>
+                    </s:LinearGradient>
+                </s:fill>
+            </s:Rect>
+
+            <s:Label text="Setup Guide: "
+                     bottom="10"
+                     fontWeight="bold"
+                     right="320"
+                     top="10"/>
+            <s:Label text="configuring your application for use with FlexMonkey"
+                     bottom="10"
+                     right="35"
+                     top="10"/>
+            <components:OpenCloseButton right="5"
+                                        top="5"
+                                        click="hideShowSetupButton_clickHandler(event);"
+                                        open="{ showSetupDialog }"
+                                        skinClass="com.gorillalogic.flexmonkey.views.skins.EllipseOpenCloseButtonSkin"/>
+            <project:FlexMonkeySetupGuide includeInLayout="{ showSetupDialog }"
+                                          visible="{ showSetupDialog }"/>
+        </s:Group>
+    </s:VGroup>
+
+    <forms:AlertDialog id="alertDialog"
+                       visible="false"/>
+
+</s:Window>

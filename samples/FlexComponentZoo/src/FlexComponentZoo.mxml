@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600" xmlns:views="com.gorillalogic.componentzoo.views.*">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.INavigatorContent;
+			
+			// Event handler for the Tree control change event.
+			public function treeChanged(event:Event):void {
+				var selectedNode:XML = Tree(event.target).selectedItem as XML;
+				viewStack.selectedChild = viewStack.getChildByName(selectedNode.@label) as INavigatorContent;
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<fx:XMLList id="treeData">
+			<node label="Spark">
+				<node label="DragDropView" />
+				<node label="Button"/>
+				<node label="ButtonBar"/>
+				<node label="CheckBox"/>	
+				<node label="ColorPicker" />
+				<node label="ComboBox" />
+			
+				<node label="List" />
+			
+				<node label="PopUpAnchor" />
+				<node label="PopUpButton" />
+			
+				<node label="RadioButton" />
+				<node label="RichEditableText" />
+				<node label="RichText" />
+				<node label="ScrollBar" />
+				<node label="Scroller" />
+				<node label="Slider" />
+				<node label="Spinner" />
+				<node label="TabBar" />
+				<node label="TextArea" />
+				<node label="TextInput" />
+				<node label="ToggleButton" />
+				
+		
+
+				</node>   
+		</fx:XMLList>
+	</fx:Declarations>
+	<s:Panel x="10" y="10" width="100%" height="100%">
+		<mx:HDividedBox width="100%" height="100%">
+			<mx:Tree dataProvider="{treeData}" change="treeChanged(event)" labelField="@label" height="100%" width="220"/>
+				<mx:ViewStack id="viewStack" borderStyle="solid" width="100%" height="80%" color="0x323232">
+					<s:NavigatorContent id="dragDropView" name="DragDropView" label="DragDropView" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:DragDropView />
+					</s:NavigatorContent>
+					<s:NavigatorContent id="button" name="Button" label="Button" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:ButtonView/>
+					</s:NavigatorContent>
+					
+					<s:NavigatorContent id="buttonBar" name="ButtonBar" label="ButtonBar" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:ButtonBarView/>
+					</s:NavigatorContent>										
+					
+					<s:NavigatorContent id="checkBox" name="CheckBox" label="CheckBox" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:CheckBoxView />
+					</s:NavigatorContent>							
+
+					<s:NavigatorContent id="colorPicker" name="ColorPicker" label="ColorPicker" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:ColorPickerView />
+					</s:NavigatorContent>							
+
+					<s:NavigatorContent id="comboBox" name="ComboBox" label="ComboBox" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:ComboBoxView />
+					</s:NavigatorContent>							
+
+					<s:NavigatorContent id="listView" name="List" label="List" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:ListView />
+					</s:NavigatorContent>							
+
+					<s:NavigatorContent id="popupAnchor" name="PopupAnchor" label="ColorPicker" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold">
+						<s:PopUpAnchor />
+					</s:NavigatorContent>							
+
+					<s:NavigatorContent id="radioButton" name="RadioButton" label="RadiotButton" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:RadioButtonView />
+					</s:NavigatorContent>							
+
+					<s:NavigatorContent id="richEditableText" name="RichEditableText" label="RichEditableText" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<s:RichEditableText />
+					</s:NavigatorContent>							
+
+					<s:NavigatorContent id="richText" name="RichText" label="RichText" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<s:RichText />
+					</s:NavigatorContent>							
+					
+					<s:NavigatorContent id="scrollBarView" name="ScrollBar" label="ScrollBar" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:ScrollBarView />
+					</s:NavigatorContent>							
+
+					<s:NavigatorContent id="scrollerView" name="Scroller" label="Scroller" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:ScrollerView />
+					</s:NavigatorContent>							
+					
+					<s:NavigatorContent id="sliderView" name="Slider" label="Slider" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:SliderView />
+					</s:NavigatorContent>	
+					
+					<s:NavigatorContent id="spinnerView" name="Spinner" label="Spinner" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:SpinnerView />
+					</s:NavigatorContent>	
+
+					<s:NavigatorContent id="tabBarView" name="TabBar" label="TabBar" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:TabBarView />
+					</s:NavigatorContent>
+					
+					<s:NavigatorContent id="textAreaView" name="TextArea" label="TextArea" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:TextAreaView />
+					</s:NavigatorContent>	
+					
+					<s:NavigatorContent id="textInputView" name="TextInput" label="TextInput" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:TextInputView />
+					</s:NavigatorContent>	
+					
+					<s:NavigatorContent id="toggleButtonView" name="ToggleButton" label="ToggleButton" backgroundColor="0xDCDCDC" width="100%" height="100%" fontWeight="bold" >
+						<views:ToggleButtonView />
+					</s:NavigatorContent>	
+					
+	
+					
+				</mx:ViewStack>
+		</mx:HDividedBox>
+	</s:Panel>
+</s:Application>

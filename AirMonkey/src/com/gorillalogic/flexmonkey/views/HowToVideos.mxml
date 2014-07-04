@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Window xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+          xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+          width="840"
+          height="550"
+          skinClass="com.gorillalogic.flexmonkey.views.skins.WindowSkin"
+          creationComplete="create(event)"
+          close="closeHandler(event)"
+          title="FlexMonkey :: How-to Videos">
+
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            import mx.core.FlexGlobals;
+            import mx.events.FlexEvent;
+            import mx.events.ResizeEvent;
+            import mx.rpc.events.FaultEvent;
+            import mx.rpc.events.ResultEvent;
+
+            import org.osmf.events.MediaPlayerStateChangeEvent;
+            import org.osmf.net.StreamingURLResource;
+            import org.osmf.utils.URL;
+
+            import spark.components.Application;
+            import spark.components.VideoPlayer;
+            import spark.events.IndexChangeEvent;
+
+            //private const BASE_VIDEO_URL:String = "rtmp://s397scxeo9efh8.cloudfront.net/cfx/st/mp4:"; // Streaming URL - works in Flex 4.5
+            private var baseVideoUrl:String = "";
+            //private const HELP_VIDEO_FILE_URL:String = "http://d1rtjm8ktle8h3.cloudfront.net/videos.xml";
+            private const HELP_VIDEO_FILE_URL:String = "http://www.gorillalogic.com/userfiles/flexmonkey/videos/how-to-videos.xml";
+
+            [Bindable] public var videoUrl:String;
+            [Bindable] public var videoOptions:ArrayCollection;
+
+            protected function create(event:FlexEvent):void {
+                helpVideosService.send();
+            }
+
+            protected function closeHandler(event:Event):void {
+                if (!this.contains(videoComboBox)) {
+                    this.addElement(videoComboBox);
+                }
+
+                videoComboBox.selectedIndex = -1;
+                videoPlayer.stop();
+                videoUrl = null;
+            }
+
+            protected function closeVideoHandler(event:Event):void {
+                videoPlayer.stop();
+
+                if (!this.contains(videoComboBox)) {
+                    this.addElement(videoComboBox);
+                }
+                videoComboBox.selectedIndex = -1;
+                videoUrl = null;
+            }
+
+            protected function selectVideoHandler(event:IndexChangeEvent):void {
+                this.removeElement(videoComboBox);
+                videoUrl = baseVideoUrl + videoComboBox.selectedItem.filename;
+            }
+
+            private function setApplicationWindowState():void {
+                var app:Application = (FlexGlobals.topLevelApplication as Application);
+
+                if (app.stage.displayState == "fullScreen") {
+                    app.visible = true;
+                } else {
+                    app.visible = false;
+                }
+            }
+
+            protected function videoPlayer_resizeHandler(event:ResizeEvent):void {
+                callLater(setApplicationWindowState);
+            }
+
+            protected function helpVideosService_resultHandler(event:ResultEvent):void {
+                videoOptions = new ArrayCollection();
+
+                for each (var row:Object in event.result.FlexMonkeyVids.Video) {
+                    videoOptions.addItem({ desc: row.name, filename: row.filename });
+                }
+				
+				baseVideoUrl = event.result.FlexMonkeyVids.BaseUrl;
+            }
+
+            protected function helpVideosService_faultHandler(event:FaultEvent):void {
+                alertDialog.alertMessage = "Failed to open video list: " + event.message;
+                alertDialog.visible = true;
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <mx:HTTPService id="helpVideosService"
+                        url="{HELP_VIDEO_FILE_URL}"
+                        result="helpVideosService_resultHandler(event)"
+                        fault="helpVideosService_faultHandler(event)"/>
+    </fx:Declarations>
+
+    <s:List id="videoComboBox"
+            dataProvider="{videoOptions}"
+            labelField="desc"
+            horizontalCenter="0"
+            verticalCenter="0"
+            width="400"
+            height="425"
+            change="selectVideoHandler(event)"/>
+
+    <s:VideoPlayer id="videoPlayer"
+                   source="{videoUrl}"
+                   left="5"
+                   right="5"
+                   top="5"
+                   bottom="35"
+                   visible="{videoUrl != null}"
+                   includeInLayout="{videoUrl != null}"
+                   resize="videoPlayer_resizeHandler(event)"/>
+
+    <!--
+    works in flex 4.5 to do streaming
+    <s:VideoPlayer id="videoPlayer"
+    source="{new StreamingURLResource(videoUrl, null, NaN, NaN, null, true)}"
+    left="5"
+    right="5"
+    top="5"
+    bottom="35"
+    visible="{videoUrl != null}"
+    includeInLayout="{videoUrl != null}"
+    resize="videoPlayer_resizeHandler(event)"/>
+    -->
+
+    <s:Button label="Close Video"
+              click="closeVideoHandler(event)"
+              skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"
+              visible="{videoUrl != null}"
+              includeInLayout="{videoUrl != null}"
+              bottom="5"
+              horizontalCenter="0"/>
+
+    <forms:AlertDialog id="alertDialog"
+                       visible="false"/>
+
+</s:Window>

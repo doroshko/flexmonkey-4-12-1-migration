@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Button xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          skinClass="com.gorillalogic.flexmonkey.views.skins.PlayPauseButtonSkin">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.views.skins.PlayPauseButtonSkin;
+
+            private var _playing:Boolean = false;
+
+            [Bindable] public function get playing():Boolean {
+                return _playing;
+            }
+
+            public function set playing(val:Boolean):void {
+                if (_playing != val) {
+                    _playing = val;
+                    invalidateSkinState();
+                }
+            }
+
+            override protected function getCurrentSkinState():String {
+                return super.getCurrentSkinState() + (playing ? '' : 'AndPaused');
+            }
+        ]]>
+    </fx:Script>
+
+</s:Button>

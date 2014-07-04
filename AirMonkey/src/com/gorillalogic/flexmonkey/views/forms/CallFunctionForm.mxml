@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="Call Function Command"
+                    title.newMonkeyRunnable="Select Component"
+                    titleImageSource="{Assets.funcImageClass}"
+                    monkeyRunnable="{this.command}">
+
+    <containers:states>
+        <s:State name="base"/>
+        <s:State name="newMonkeyRunnable"/>
+    </containers:states>
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.monkeyCommands.CallFunctionMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.SetPropertyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.StoreValueMonkeyCommand;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+            import com.gorillalogic.framework.FMHub;
+            import com.gorillalogic.utils.FMMessageConstants;
+
+            import mx.collections.ArrayCollection;
+            import mx.events.PropertyChangeEvent;
+
+            private var _command:CallFunctionMonkeyCommand;
+            [Bindable] private var _argsDataProvider:ArrayCollection;
+
+            [Bindable] public function get command():CallFunctionMonkeyCommand {
+                return _command;
+            }
+
+            public function set command(value:CallFunctionMonkeyCommand):void {
+                _command = value;
+                _argsDataProvider = new ArrayCollection(_command.args);
+
+                // verify property changes
+                if (_command != null) {
+                    _command.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, cmdUpdated);
+                }
+            }
+
+            protected function cmdUpdated(event:Event):void {
+                if (_command.parent != null) {
+                    ApplicationModel.instance.isMonkeyTestFileDirty = true;
+                }
+            }
+
+            protected function clickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.CANCEL_COMPONENT_SELECTION));
+                closePopup();
+            }
+
+            protected function retryOnlyOnResponseChangeHandler(event:Event):void {
+                _command.retryOnlyOnResponse = retryOnlyOnResponseCheckBox.selected;
+            }
+
+            protected function argsListItemEditEndHandler(event:Event):void {
+                cmdUpdated(event);
+            }
+
+            protected function argsAddClickHandler(event:MouseEvent):void {
+                _command.args[_command.args.length] = "New Argument";
+                _argsDataProvider.refresh();
+                cmdUpdated(event);
+            }
+
+            protected function argsRemoveClickHandler(event:MouseEvent):void {
+                _command.args.splice(argsList.selectedIndex, 1);
+                _argsDataProvider.refresh();
+                cmdUpdated(event);
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:Group maxHeight="575"
+             maxWidth="650"
+             minWidth="400"
+             bottom="0"
+             left="0"
+             right="0"
+             top="0"
+             includeIn="base">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"/>
+        </s:layout>
+
+        <mx:Form width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+
+            <mx:FormItem width="100%"
+                         label="Description"
+                         labelWidth="145">
+                <mx:TextInput width="100%"
+                              text="@{ command.description }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Target Value"
+                         labelWidth="145">
+                <mx:TextInput width="100%"
+                              text="@{ command.value }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Target Property"
+                         labelWidth="145">
+                <mx:TextInput width="100%"
+                              text="@{ command.prop }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Container Value"
+                         labelWidth="145">
+                <mx:TextInput width="100%"
+                              text="@{ command.containerValue }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Container Property"
+                         labelWidth="145">
+                <mx:TextInput width="100%"
+                              text="@{ command.containerProp }"/>
+            </mx:FormItem>
+
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+
+            <mx:FormItem width="100%"
+                         label="Function Name"
+                         labelWidth="145">
+                <mx:TextInput width="100%"
+                              text="@{ command.functionName }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Arguments"
+                         labelWidth="145">
+                <mx:VBox width="100%">
+                    <mx:List id="argsList"
+                             width="100%"
+                             rowCount="2"
+                             dataProvider="{ _argsDataProvider }"
+                             editable="true"
+                             alternatingItemColors="[0xFFFFFF,0xDFDFDF]"
+                             itemEditEnd="argsListItemEditEndHandler(event)"/>
+                    <mx:HBox width="100%">
+                        <mx:Button label="Add"
+                                   click="argsAddClickHandler(event)"/>
+                        <mx:Spacer width="100%" />
+                        <mx:Button label="Remove"
+                                   click="argsRemoveClickHandler(event)"
+                                   enabled="{ argsList.selectedItem }"/>
+                    </mx:HBox>
+                </mx:VBox>
+            </mx:FormItem>
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form id="retryForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+            <mx:FormItem width="100%"
+                         label="Retry Delay"
+                         labelWidth="145">
+                <mx:TextInput id="verifyDelayFormItem"
+                              width="100%"
+                              text="@{ command.delay }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Retry Attempts"
+                         labelWidth="145">
+                <mx:TextInput id="verifyAttemptsFormItem"
+                              width="100%"
+                              text="@{ command.attempts }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Total Retry Timeout"
+                         labelWidth="145">
+                <mx:TextInput id="verifyTimeoutFormItem"
+                              width="100%"
+                              text="{ command.timeOut }"
+                              enabled="false"
+                              editable="false"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Retry only on Response"
+                         labelWidth="145">
+
+                <s:CheckBox id="retryOnlyOnResponseCheckBox"
+                            width="100%"
+                            selected="{command.retryOnlyOnResponse}"
+                            change="retryOnlyOnResponseChangeHandler(event)"/>
+            </mx:FormItem>
+        </mx:Form>
+    </s:Group>
+
+    <s:Group maxHeight="650"
+             maxWidth="800"
+             bottom="20"
+             left="20"
+             right="20"
+             top="20"
+             includeIn="newMonkeyRunnable">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label width="400"
+                 text="{ FMMessageConstants.FUNCTION_CMD_COMPONENT_SELECTION }"
+                 fontSize="18"
+                 fontWeight="bold"
+                 textAlign="center"
+                 maxDisplayedLines="-1"/>
+        <s:Button label="Cancel"
+                  click="clickHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+    </s:Group>
+</containers:FMPopup>

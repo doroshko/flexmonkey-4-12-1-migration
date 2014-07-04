@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="Store Value Command"
+                    title.newMonkeyRunnable="Select Component"
+                    titleImageSource="{Assets.keyImageClass}"
+                    monkeyRunnable="{this.command}">
+
+    <containers:states>
+        <s:State name="base"/>
+        <s:State name="newMonkeyRunnable"/>
+    </containers:states>
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+			import com.gorillalogic.flexmonkey.model.ApplicationModel;
+			import com.gorillalogic.flexmonkey.monkeyCommands.SetPropertyMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.StoreValueMonkeyCommand;
+			import com.gorillalogic.flexmonkey.utils.Assets;
+			import com.gorillalogic.utils.FMMessageConstants;
+			import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+			import com.gorillalogic.framework.FMHub;
+			
+			import mx.events.PropertyChangeEvent;
+
+            private var _command:StoreValueMonkeyCommand;
+
+            [Bindable] public function get command():StoreValueMonkeyCommand {
+                return _command;
+            }
+
+            public function set command(value:StoreValueMonkeyCommand):void {
+                _command = value;
+
+                // verify property changes
+                if (_command != null) {
+                    _command.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, cmdUpdated);
+                }
+            }
+
+            protected function cmdUpdated(event:Event):void {
+                if (_command.parent != null) {
+                    ApplicationModel.instance.isMonkeyTestFileDirty = true;
+                }
+            }
+
+            protected function clickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.CANCEL_COMPONENT_SELECTION));
+                closePopup();
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:Group maxHeight="575"
+             maxWidth="650"
+             minWidth="400"
+             bottom="0"
+             left="0"
+             right="0"
+             top="0"
+             includeIn="base">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"/>
+        </s:layout>
+
+        <mx:Form width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+
+            <mx:FormItem width="100%"
+                         label="Description"
+                         labelWidth="125">
+                <mx:TextInput width="100%"
+                              text="@{ command.description }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Target Value"
+                         labelWidth="125">
+                <mx:TextInput width="100%"
+                              text="@{ command.value }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Target Property"
+                         labelWidth="125">
+                <mx:TextInput width="100%"
+                              text="@{ command.prop }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Container Value"
+                         labelWidth="125">
+                <mx:TextInput width="100%"
+                              text="@{ command.containerValue }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Container Property"
+                         labelWidth="125">
+                <mx:TextInput width="100%"
+                              text="@{ command.containerProp }"/>
+            </mx:FormItem>
+
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+
+            <mx:FormItem width="100%"
+                         label="Key Name"
+                         labelWidth="125">
+                <mx:TextInput width="100%"
+                              text="@{ command.keyName }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Property String"
+                         labelWidth="125">
+                <mx:TextInput width="100%"
+                              text="@{ command.propertyString }"/>
+            </mx:FormItem>
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form id="retryForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+            <mx:FormItem width="100%"
+                         label="Retry Delay"
+                         labelWidth="125">
+                <mx:TextInput id="verifyDelayFormItem"
+                              width="100%"
+                              text="@{ command.delay }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Retry Attempts"
+                         labelWidth="125">
+                <mx:TextInput id="verifyAttemptsFormItem"
+                              width="100%"
+                              text="@{ command.attempts }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Total Retry Timeout"
+                         labelWidth="125">
+                <mx:TextInput id="verifyTimeoutFormItem"
+                              width="100%"
+                              text="{ command.timeOut }"
+                              enabled="false"
+                              editable="false"/>
+            </mx:FormItem>
+        </mx:Form>
+    </s:Group>
+
+    <s:Group maxHeight="650"
+             maxWidth="800"
+             bottom="20"
+             left="20"
+             right="20"
+             top="20"
+             includeIn="newMonkeyRunnable">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label width="400"
+                 text="{ FMMessageConstants.SET_PROPERTY_COMPONENT_SELECTION }"
+                 fontSize="18"
+                 fontWeight="bold"
+                 textAlign="center"
+                 maxDisplayedLines="-1"/>
+        <s:Button label="Cancel"
+                  click="clickHandler(event)"
+				  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+    </s:Group>
+</containers:FMPopup>

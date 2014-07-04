@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx"
+                          focusEnabled="true"
+                          width="30">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.vo.AttributeVO;
+
+            [Bindable] private var attribute:AttributeVO
+
+            override public function set data(value:Object):void {
+                attribute = value as AttributeVO;
+            }
+
+            protected function changeHandler(event:Event):void {
+                attribute.selected = checkBox.selected;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:CheckBox id="checkBox"
+                left="7"
+                top="0"
+                selected="{attribute.selected}"
+                change="changeHandler(event)"/>
+
+</s:MXDataGridItemRenderer>

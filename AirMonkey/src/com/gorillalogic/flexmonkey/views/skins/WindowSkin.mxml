@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+        xmlns:mx="library://ns.adobe.com/flex/mx">
+
+    <fx:Metadata>
+		[HostComponent("spark.components.Window")]
+	</fx:Metadata>
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.utils.Assets;
+			import com.gorillalogic.utils.FMMessageConstants;
+        ]]>
+    </fx:Script>
+    <s:states>
+        <s:State name="normal"/>
+        <s:State name="disabled"/>
+        <s:State name="normalAndInactive"/>
+        <s:State name="disabledAndInactive"/>
+    </s:states>
+
+    <s:Rect top="0"
+            left="0"
+            right="0"
+            bottom="15">
+        <s:fill>
+            <s:BitmapFill source="{Assets.backgroundImageClass}"
+                          fillMode="repeat"/>
+        </s:fill>
+    </s:Rect>
+
+    <s:Group height="20"
+             left="0"
+             right="0"
+             bottom="0">
+        <s:Rect top="0"
+                bottom="0"
+                left="0"
+                right="0">
+            <s:fill>
+                <s:SolidColor color="#eeeeee"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:Label text="{FMMessageConstants.WINDOW_MSG}"
+                 fontSize="11"
+                 fontStyle="italic"
+                 textAlign="center"
+                 width="100%"
+                 bottom="3"/>
+    </s:Group>
+
+    <s:Rect top="0"
+            left="0"
+            right="0"
+            bottom="0">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry color="#ffffff"
+                                 alpha=".45"/>
+                <s:GradientEntry color="#ffffff"
+                                 alpha=".1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+
+    <s:Group id="contentGroup"
+             left="0"
+             right="0"
+             top="0"
+             bottom="20"
+             minWidth="0"
+             minHeight="0">
+        <s:layout>
+            <s:BasicLayout/>
+        </s:layout>
+    </s:Group>
+
+</s:Skin>

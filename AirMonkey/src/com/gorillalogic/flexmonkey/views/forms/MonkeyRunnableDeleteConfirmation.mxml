@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="Delete Confirmation">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyNode;
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.core.MonkeyTest;
+            import com.gorillalogic.flexmonkey.core.MonkeyTestCase;
+            import com.gorillalogic.flexmonkey.core.MonkeyTestSuite;
+            import com.gorillalogic.flexmonkey.events.MonkeyNodeEvent;
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.monkeyCommands.PauseMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.UIEventMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyGridMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyPropertyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+            import com.gorillalogic.framework.FMHub;
+
+            [Bindable] private var what:String;
+            [Bindable] private var nodeName:String;
+            private var _node:MonkeyRunnable;
+
+            [Bindable] public function get node():MonkeyRunnable {
+                return _node;
+            }
+
+            public function set node(value:MonkeyRunnable):void {
+                _node = value;
+
+                if (_node is MonkeyTestSuite) {
+                    what = "Test Suite";
+                } else if (_node is MonkeyTestCase) {
+                    what = "Test Case";
+                } else if (_node is MonkeyTest) {
+                    what = "Test";
+                } else if (_node is UIEventMonkeyCommand) {
+                    what = "UI Event";
+                } else if (_node is VerifyMonkeyCommand) {
+                    what = "Verify";
+                } else if (_node is VerifyPropertyMonkeyCommand) {
+                    what = "Verify Property";
+                } else if (_node is VerifyGridMonkeyCommand) {
+                    what = "Verify Grid";
+                } else if (_node is PauseMonkeyCommand) {
+                    what = "Pause";
+                }
+
+                if (_node is MonkeyNode) {
+                    nodeName = what + ": " + (_node as MonkeyNode).name;
+                } else {
+                    nodeName = value.getLabel();
+                }
+            }
+
+            protected function yesClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.DELETE_MONKEY_RUNNABLE, _node));
+                closePopup();
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Label text="Are you sure you would like to delete: { nodeName }?"
+             maxWidth="425"
+             bottom="42"
+             fontWeight="bold"
+             left="5"
+             right="5"
+             textAlign="center"
+             top="10"
+             maxDisplayedLines="-1"/>
+
+    <s:HGroup bottom="8"
+              horizontalCenter="0"
+              paddingTop="5">
+        <s:Button label="Yes"
+                  click="yesClickHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+        <s:Button label="No"
+                  click="closeClickHander(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+    </s:HGroup>
+
+</containers:FMPopup>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+             xmlns:s="library://ns.adobe.com/flex/spark"
+             minWidth="40"
+             minHeight="18"
+             alpha.disabled="0.5">
+
+    <fx:Metadata>
+		[HostComponent("spark.components.Button")]
+	</fx:Metadata>
+
+    <!-- states -->
+    <s:states>
+        <s:State name="up"/>
+        <s:State name="over"
+                 stateGroups="overDown"/>
+        <s:State name="down"
+                 stateGroups="overDown"/>
+        <s:State name="disabled"/>
+    </s:states>
+
+    <!-- transitions -->
+    <s:transitions>
+        <s:Transition fromState="up"
+                      toState="over"
+                      autoReverse="true">
+            <s:Parallel duration="250">
+                <s:AnimateColor target="{bottomColor}"/>
+                <s:AnimateColor target="{strokeColor}"/>
+                <s:AnimateColor target="{labelDisplay}"/>
+                <s:Animate target="{glow}">
+                    <s:SimpleMotionPath property="alpha"/>
+                </s:Animate>
+            </s:Parallel>
+        </s:Transition>
+        <s:Transition fromState="over"
+                      toState="up"
+                      autoReverse="true">
+            <s:Parallel duration="250">
+                <s:AnimateColor target="{bottomColor}"/>
+                <s:AnimateColor target="{strokeColor}"/>
+                <s:AnimateColor target="{labelDisplay}"/>
+                <s:Animate target="{glow}">
+                    <s:SimpleMotionPath property="alpha"/>
+                </s:Animate>
+            </s:Parallel>
+        </s:Transition>
+    </s:transitions>
+
+    <!-- button -->
+    <s:Rect id="bg"
+            left="0"
+            right="0"
+            top="0"
+            bottom="0"
+            radiusX="4">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry color="#ffffff"
+                                 color.down="#eeeeee"
+                                 ratio="0"/>
+                <s:GradientEntry id="bottomColor"
+                                 color="#e1e1e1"
+                                 color.over="#f2f2f2"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke id="strokeColor"
+                                color="#bbbbbb"
+                                color.overDown="#000000"/>
+        </s:stroke>
+        <s:filters>
+            <s:GlowFilter id="glow"
+                          color="#888888"
+                          blurX="8"
+                          blurY="8"
+                          alpha="0"
+                          alpha.overDown="0.5"/>
+        </s:filters>
+    </s:Rect>
+
+    <!-- label -->
+    <s:Label id="labelDisplay"
+             textAlign="center"
+             verticalAlign="middle"
+             maxDisplayedLines="1"
+             color="#555555"
+             color.overDown="#000000"
+             fontSize="10"
+             fontFamily="Arial"
+             fontWeight="normal"
+             horizontalCenter="0"
+             verticalCenter="1"
+             left="10"
+             right="10">
+    </s:Label>
+</s:SparkSkin>

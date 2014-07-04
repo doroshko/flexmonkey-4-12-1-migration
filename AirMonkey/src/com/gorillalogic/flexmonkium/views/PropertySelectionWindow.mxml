@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+		 alwaysInFront="true"
+		 maxWidth="{verifyForm.width+chromeWidth}" maxHeight="{verifyForm.height+chromeHeight}"
+		 width="{verifyForm.width+chromeWidth}" height="{verifyForm.height+chromeHeight}"
+		 creationComplete="create()"
+		 closing="cancel()">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.gorillalogic.monkeylink.MonkeyLinkConsoleConnectionController;
+			
+			[Bindable]
+			private var chromeWidth:int;
+			
+			[Bindable]
+			private var chromeHeight:int
+			private function create():void {
+				chromeWidth = this.stage.nativeWindow.width - this.stage.stageWidth;
+				chromeHeight = this.stage.nativeWindow.height - this.stage.stageHeight;
+			}
+			
+			private function cancel():void {
+				MonkeyLinkConsoleConnectionController.instance.cancelComponentSelection();
+			}
+		]]>
+	</fx:Script>
+	<forms:VerifyForm id="verifyForm" currentState="newMonkeyRunnable" showClose="false"/>
+	
+</s:Window>

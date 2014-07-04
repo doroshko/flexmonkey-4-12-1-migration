@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         left="0"
+         right="0"
+         bottom="0"
+         top="0">
+
+
+    <s:Rect left="0"
+            right="0"
+            bottom="0"
+            top="0">
+        <s:fill>
+            <s:SolidColor color="#ffffff"
+                          alpha=".70"/>
+        </s:fill>
+    </s:Rect>
+
+    <s:Label text="Loading Test Suite"
+             textAlign="center"
+             verticalAlign="middle"
+             fontSize="36"
+             left="0"
+             right="0"
+             bottom="0"
+             top="0"/>
+
+    <mx:ProgressBar id="progressBar"
+                    width="200"
+                    label=""
+                    indeterminate="true"
+                    labelPlacement="center"
+                    trackHeight="15"
+                    horizontalCenter="0"
+                    verticalCenter="50"/>
+
+</s:Group>

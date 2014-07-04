@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         left="0"
+         right="0"
+         height="375"
+         creationComplete="create()">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.utils.MonkeyLinkSwcsDownloadInfo;
+
+            import mx.collections.ArrayCollection;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable] private var sdkOptions:ArrayCollection;
+            [Bindable] private var swcFilename:String;
+            [Bindable] private var compileArgs:String;
+            private var localSwcFile:File;
+
+            private function create():void {
+                sdkOptions = new ArrayCollection(MonkeyLinkSwcsDownloadInfo.sdkVersions);
+            }
+
+            protected function dragFileToProjectHandler(event:MouseEvent):void {
+                var clipboard:Clipboard = new Clipboard();
+                clipboard.setData(ClipboardFormats.FILE_LIST_FORMAT, [ localSwcFile ]);
+
+                var bitmapData:BitmapData = (fileInitator.content as Bitmap).bitmapData;
+
+                NativeDragManager.doDrag(fileInitator,
+                                         clipboard,
+                                         bitmapData,
+                                         new Point(-fileInitator.mouseX, fileInitator.mouseY));
+            }
+
+            protected function sdkVersionInput_changeHandler(event:IndexChangeEvent):void {
+                //set compile args
+                compileArgs = MonkeyLinkSwcsDownloadInfo.getCompileArgs(sdkVersionInput.selectedItem.version, usingAdobeAirCheckbox.selected);
+
+                //load swc file
+                swcFilename = MonkeyLinkSwcsDownloadInfo.getFilename(sdkVersionInput.selectedItem.version);
+                var swcFile:File = File.applicationDirectory.resolvePath("assets/accessories/" + swcFilename + ".zip");
+
+                //create swc file so that it will have the right name
+                var tmpDir:File = File.createTempDirectory();
+                localSwcFile = tmpDir.resolvePath(swcFilename);
+                var fileStream:FileStream = new FileStream();
+                fileStream.open(localSwcFile, FileMode.WRITE);
+                fileStream.writeUTFBytes("create file");
+                fileStream.close();
+
+                //copy file
+                swcFile.copyTo(localSwcFile, true);
+            }
+
+            protected function usingAdobeAirCheckboxChangeHandler(event:Event):void {
+                compileArgs = MonkeyLinkSwcsDownloadInfo.getCompileArgs(sdkVersionInput.selectedItem.version, usingAdobeAirCheckbox.selected);
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Group left="5"
+             top="40"
+             right="5"
+             bottom="5">
+        <!-- row one -->
+        <s:Label text="Step #1: "
+                 fontWeight="bold"
+                 left="0"
+                 top="5"/>
+        <s:Label text="Select the version of the Flex SDK your application is using:"
+                 left="50"
+                 top="5"/>
+        <s:DropDownList id="sdkVersionInput"
+                        prompt="- please your Flex SDK version -"
+                        dataProvider="{sdkOptions}"
+                        change="sdkVersionInput_changeHandler(event)"
+                        labelField="version"
+                        left="385"
+                        top="0"
+                        width="215"/>
+
+        <s:Label text="Step #2: "
+                 fontWeight="bold"
+                 left="0"
+                 top="30"
+                 visible="{sdkVersionInput.selectedItem != null}"/>
+        <s:Label text="Are you using Adobe AIR?:"
+                 left="50"
+                 top="30"
+                 visible="{sdkVersionInput.selectedItem != null}"/>
+        <s:CheckBox id="usingAdobeAirCheckbox"
+                    left="385"
+                    top="30"
+                    change="usingAdobeAirCheckboxChangeHandler(event)"
+                    visible="{sdkVersionInput.selectedItem != null}"/>
+
+        <s:Group id="sdkConfigGroup"
+                 left="0"
+                 right="0"
+                 bottom="0"
+                 top="60"
+                 visible="{sdkVersionInput.selectedItem != null}">
+
+            <!-- row two -->
+            <s:Label text="Step #3: "
+                     fontWeight="bold"
+                     left="0"
+                     top="0"/>
+            <s:Label text="Add the FlexMonkey library to your project:"
+                     left="50"
+                     top="0"/>
+            <mx:Image id="fileInitator"
+                      source="{Assets.swcFileImageClass}"
+                      left="325"
+                      top="0"
+                      mouseDown="dragFileToProjectHandler(event)"/>
+            <s:Label text="Drag the {swcFilename} file into your Flex project.  You can do this by clicking on the icon to the left of this text.  In the typical Eclipse project you want to drop this into your 'libs' directory."
+                     fontStyle="italic"
+                     maxDisplayedLines="-1"
+                     width="340"
+                     left="385"
+                     top="0"/>
+
+            <!-- row three -->
+            <s:Label text="Step #4: "
+                     fontWeight="bold"
+                     left="0"
+                     top="65"/>
+            <s:Label text="Add the following compile arguments to your Flex project:"
+                     left="50"
+                     top="65"/>
+            <s:Label text="In Eclipse / Flash Builder, you can set these arguments by going to: Project > Properties > Flex Compiler, and appending them to 'Additional compiler arguments.'  These arguments assume that the FlexMonkey SWC file is your 'libs' directory.  If you have a different configuration, please modify accordingly."
+                     fontStyle="italic"
+                     maxDisplayedLines="-1"
+                     width="340"
+                     left="385"
+                     top="85"/>
+
+            <s:TextArea left="0"
+                        top="85"
+                        width="375"
+                        height="100"
+                        text="{compileArgs}"
+                        editable="false"/>
+
+            <!-- row four -->
+            <s:Label text="Step #5: "
+                     fontWeight="bold"
+                     left="0"
+                     top="200"/>
+            <s:Label text="Set the output directory above in properties window."
+                     left="50"
+                     top="200"/>
+
+            <!-- row five -->
+            <s:Label text="Step #6: "
+                     fontWeight="bold"
+                     left="0"
+                     top="225"/>
+            <s:Label text="Configure the package name or use the default."
+                     left="50"
+                     top="225"/>
+
+        </s:Group>
+
+    </s:Group>
+</s:Group>

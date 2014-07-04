@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<application xmlns="http://ns.adobe.com/air/application/2.6">
+
+    <id>com.gorillalogic.FlexMonkey</id>
+    <filename>FlexMonkey</filename>
+    <name>FlexMonkey 5</name>
+    <versionNumber>5.1.1</versionNumber>
+    <copyright>Copyright 2009, 2010, 2011 by Gorilla Logic, Inc.</copyright>
+    <publisherID>FAF8CB444E71DE51EAFD06DD0331CF35731C3B7D.1</publisherID>
+
+    <initialWindow>
+        <content>[This value will be overwritten by Flash Builder in the output app.xml]</content>
+        <x>150</x>
+        <y>50</y>
+    </initialWindow>
+
+    <installFolder>FlexMonkey</installFolder>
+
+    <icon>
+        <image16x16>/assets/gorilla-16.png</image16x16>
+        <image32x32>/assets/gorilla-32.png</image32x32>
+        <image48x48>/assets/gorilla-48.png</image48x48>
+        <image128x128>/assets/gorilla-128.png</image128x128>
+    </icon>
+
+    <allowBrowserInvocation>true</allowBrowserInvocation>
+
+</application>

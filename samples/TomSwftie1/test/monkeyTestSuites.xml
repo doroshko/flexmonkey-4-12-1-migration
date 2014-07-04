@@ -1,0 +1,22 @@
+<FlexMonkey>
+  <TestSuite name="NewTestSuite" description="" ignore="false">
+    <TestCase name="NewTestCase" description="" ignore="false">
+      <Test name="NewTest" description="" defaultThinkTime="0" ignore="false">
+        <UIEvent command="Click" value="launch Quote-o-matic" prop="automationName" delay="500" attempts="10" retryOnlyOnResponse="false"/>
+        <Verify value="Next Quote" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="20" verifyBitmap="false" snapshotURL="C4891EC6-42D0-11CB-2E1D-579E7688CA69.snp" verifyBitmapFuzziness="0">
+          <Attribute name="label" expectedValue="Next Quote" type="property" actualValue="Next Quote"/>
+        </Verify>
+        <UIEvent command="Click" value="Next Quote" prop="automationName" delay="500" attempts="10" retryOnlyOnResponse="false"/>
+        <UIEvent command="Click" value="Next Quote" prop="automationName" delay="500" attempts="10" retryOnlyOnResponse="false"/>
+        <UIEvent command="Click" value="Next Quote" prop="automationName" delay="500" attempts="10" retryOnlyOnResponse="false"/>
+        <UIEvent command="Click" value="Next Quote" prop="automationName" delay="500" attempts="10" retryOnlyOnResponse="false"/>
+        <Verify value="_QuoteOMatic_TextArea1" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="20" verifyBitmap="false" snapshotURL="E53B948E-3DE2-1DC6-AF2E-579C859E2390.snp" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Double, double toil and trouble&#xA;Fire burn, and cauldron bubble." type="property" actualValue="Double, double toil and trouble&#xA;Fire burn, and cauldron bubble."/>
+        </Verify>
+        <UIEvent command="Click" value="Next Quote" prop="automationName" delay="500" attempts="10" retryOnlyOnResponse="false"/>
+        <UIEvent command="Click" value="Next Quote" prop="automationName" delay="500" attempts="10" retryOnlyOnResponse="false"/>
+        <UIEvent command="Click" value="unload Quote-o-matic" prop="automationName" delay="500" attempts="10" retryOnlyOnResponse="false"/>
+      </Test>
+    </TestCase>
+  </TestSuite>
+</FlexMonkey>

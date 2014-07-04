@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkSkin
+		xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		width="20" height="20"
+		alpha.disabled="0.5">
+
+	<fx:Metadata>
+		[HostComponent("spark.components.Button")]
+	</fx:Metadata>
+
+	<!-- states -->
+	<s:states>
+		<s:State name="up" />
+		<s:State name="over" stateGroups="overDown" />
+		<s:State name="down" stateGroups="overDown" />
+		<s:State name="disabled" />
+	</s:states>
+
+	<!-- transitions -->
+	<s:transitions>
+		<s:Transition fromState="up" toState="over" autoReverse="true">
+			<s:Parallel duration="250">
+				<s:AnimateColor target="{bottomColor}" />
+				<s:AnimateColor target="{strokeColor}" />
+				<s:AnimateColor target="{iconColor}" />
+				<s:Animate target="{glow}">
+					<s:SimpleMotionPath property="alpha" />
+				</s:Animate>
+			</s:Parallel>
+		</s:Transition>
+		<s:Transition fromState="over" toState="up" autoReverse="true">
+			<s:Parallel duration="250">
+				<s:AnimateColor target="{bottomColor}" />
+				<s:AnimateColor target="{strokeColor}" />
+				<s:AnimateColor target="{iconColor}" />
+				<s:Animate target="{glow}">
+					<s:SimpleMotionPath property="alpha" />
+				</s:Animate>
+			</s:Parallel>
+		</s:Transition>
+	</s:transitions>
+
+	<!-- bg -->
+	<s:Ellipse left="0" top="0" width="20" height="20">
+		<s:fill>
+			<s:SolidColor id="strokeColor" color="#bbbbbb" color.overDown="#d0d0d0" />
+		</s:fill>
+		<s:filters>
+			<s:GlowFilter id="glow" color="#888888" blurX="8" blurY="8" alpha="0" alpha.overDown="0.5" />
+		</s:filters>
+	</s:Ellipse>
+
+	<!-- circle -->
+	<s:Ellipse left="1" top="1" width="18" height="18">
+		<s:fill>
+			<s:LinearGradient rotation="90">
+				<s:GradientEntry color="#ffffff" color.down="#eeeeee" ratio="0" />
+				<s:GradientEntry id="bottomColor" color="#eeeeee" color.over="#f2f2f2" ratio="1" />
+			</s:LinearGradient>
+		</s:fill>
+	</s:Ellipse>
+
+	<!-- x -->
+	<s:Path left="5" top="5">
+		<s:data>M 0,0 L 2,0 5,3 8,0 10,0 10,2 7,5 10,8 10,10 8,10 5,7 2,10 0,10 0,8 3,5 0,2 Z</s:data>
+		<s:fill>
+			<s:SolidColor id="iconColor" color="#cccccc" color.overDown="#000000" />
+		</s:fill>
+	</s:Path>
+</s:SparkSkin>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+                    xmlns:views="com.gorillalogic.flexmonkey.application.UI.views.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    creationComplete="create()"
+                    title="Explore Children: { verifyMonkeyCommand.description }"
+                    title.newMonkeyRunnable="Select Component for Exploration"
+                    title.spyProperties="Select Properties for Exploration"
+                    titleImageSource="{ Assets.verifyImageClass }"
+                    monkeyRunnable="{this.verifyMonkeyCommand}">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.events.PayloadEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.utils.FMMessageConstants;
+            import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.binding.utils.ChangeWatcher;
+            import mx.events.PropertyChangeEvent;
+
+            private var _verifyMonkeyCommand:VerifyMonkeyCommand;
+            [Bindable] public var isNewVerify:Boolean = false;
+            [Bindable] private var verifyMonkeyCommandHasTarget:Boolean;
+
+            private function create():void {
+                this.addEventListener("removePropertyVerficationItem", removePropertyVerficationItemHandler);
+				
+            }
+
+            [Bindable] public function get verifyMonkeyCommand():VerifyMonkeyCommand {
+                return _verifyMonkeyCommand;
+            }
+
+            public function set verifyMonkeyCommand(value:VerifyMonkeyCommand):void {
+                this._verifyMonkeyCommand = value;
+
+                if (_verifyMonkeyCommand != null) {
+                    _verifyMonkeyCommand.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, verifyUpdated);
+                }
+            }
+
+            protected function verifyUpdated(event:Event):void {
+                if (verifyMonkeyCommand.parent != null) {
+                    ApplicationModel.instance.isMonkeyTestFileDirty = true;
+                }
+            }
+
+            private function removePropertyVerficationItemHandler(event:PayloadEvent):void {
+                verifyMonkeyCommand.attributes.removeItemAt(verifyMonkeyCommand.attributes.getItemIndex(event.data));
+            }
+
+
+
+      
+
+            private function cancelCreationClickHandler(event:Event):void {
+
+                closePopup();
+            }
+
+            protected function spyPropertyViewCloseHandler(event:Event):void {
+				closePopup();
+            }
+
+
+            private function showSpyWindowHandler(event:MouseEvent):void {
+                this.currentState = "spyProperties";
+                isNewVerify = false;
+                FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.LOAD_COMPONENT_SELECTION, verifyMonkeyCommand));
+            }
+
+            protected function cancelRetakeSnapshotClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.CANCEL_RETAKE_VERIFY_SNAPSHOT));
+            }
+        ]]>
+    </fx:Script>
+
+
+    <containers:states>
+        <s:State name="base"/>
+        <s:State name="newMonkeyRunnable"/>
+        <s:State name="spyProperties"/>	
+		<s:State name="spyPropertiesMonkium"/>			
+        <s:State name="baseDisplaySnapshot"/>
+    </containers:states>
+
+
+
+
+       
+
+    <!-- selecting component display -->
+    <s:Group width="400"
+             height="400"
+             maxHeight="400"
+             maxWidth="400"
+             bottom="20"
+             left="20"
+             right="20"
+             top="20"
+             includeIn="newMonkeyRunnable">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              verticalAlign="middle"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label width="400"
+                 text="{ FMMessageConstants.EXPLORE_COMPONENT_SELECTION }"
+                 fontSize="18"
+                 fontWeight="bold"
+                 textAlign="center"
+                 maxDisplayedLines="-1"/>
+        <s:Button label="Cancel"
+                  click="cancelCreationClickHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+    </s:Group>
+
+    <!-- spy property window display -->
+    <forms:VerifySpyPropertyForm id="spyPropertyView"
+                                 verify="{ verifyMonkeyCommand }"
+                                 isNewVerify="{ isNewVerify }"
+								 exploreView="true"
+                                 cancel="cancelCreationClickHandler(event)"
+                                 close="spyPropertyViewCloseHandler(event)"
+								 okButtonLabel.spyPropertiesMonkium="Done" 
+								 okButtonLabel.spyProperties="Next" 
+								 showCheckBoxes="false"
+                                 includeIn="spyProperties,spyPropertiesMonkium"/>
+
+</containers:FMPopup>

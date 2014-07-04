@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:runner="com.gorillalogic.flexmonkey.views.runner.*"
+         bottom="0"
+         top="0">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyNode;
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.events.MonkeyNodeEvent;
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.binding.utils.BindingUtils;
+            import mx.core.UIComponent;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable] public var headAlpha:Number;
+
+            [Bindable] private var isVerifyCommand:Boolean = false;
+
+            [Bindable] private var description:String;
+
+            private var _monkeyRunnable:MonkeyRunnable;
+
+            [Bindable] public function get monkeyRunnable():MonkeyRunnable {
+                return this._monkeyRunnable;
+            }
+
+            public function set monkeyRunnable(value:MonkeyRunnable):void {
+                isVerifyCommand = false;
+                description = null;
+                _monkeyRunnable = value;
+
+                if (_monkeyRunnable != null) {
+                    description = this._monkeyRunnable.getLabel(false);
+
+                    if (_monkeyRunnable is VerifyMonkeyCommand) {
+                        isVerifyCommand = true;
+                    }
+                }
+            }
+
+            protected function editButtonHandler(event:MouseEvent):void {
+                if (monkeyRunnable is MonkeyNode) {
+                    FMHub.instance.dispatchEvent(new MonkeyNodeEvent(MonkeyNodeEvent.EDIT_MONKEY_NODE, monkeyRunnable as MonkeyNode));
+                } else {
+                    FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.EDIT_MONKEY_RUNNABLE, monkeyRunnable));
+                }
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:Group id="headerGroup"
+             height="22"
+             left="0"
+             right="0"
+             top="0"
+             alpha="{ headAlpha }">
+
+        <s:Rect bottom="0"
+                left="0"
+                right="0"
+                top="0">
+            <s:fill>
+                <s:SolidColor color="#555555"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:Label text="Item Details"
+                 color="#ffffff"
+                 bottom="4"
+                 fontWeight="bold"
+                 left="5"
+                 right="0"
+                 textAlign="left"
+                 top="0"
+                 verticalAlign="bottom"/>
+
+        <runner:DisplayRunnerStatusIcon right="8"
+                                        top="4"
+                                        monkeyRunnable="{ monkeyRunnable }"/>
+    </s:Group>
+
+
+    <s:Group id="mainGroup"
+             bottom="0"
+             left="0"
+             right="0"
+             top="22">
+
+        <s:Rect bottom="0"
+                left="0"
+                right="0"
+                top="0">
+            <s:stroke>
+                <s:SolidColorStroke color="#555555"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:Button right="6"
+                  top="6"
+                  click="editButtonHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.PencilButtonSkin"
+                  visible="{ monkeyRunnable != null }"/>
+
+        <s:VGroup id="contentGroup"
+                  left="8"
+                  right="8"
+                  top="18"
+                  gap="6">
+
+            <s:Label text="{ monkeyRunnable.typeDesc }:"
+                     fontWeight="bold"/>
+
+            <s:Label width="100%"
+                     text="{ description }"
+                     fontStyle="italic"
+                     paddingLeft="5"
+                     paddingRight="5"
+                     maxDisplayedLines="3"/>
+
+            <s:Label text="Status: "
+                     includeInLayout="{ monkeyRunnable != null &amp;&amp; monkeyRunnable.runState != 'none' }"
+                     fontWeight="bold"
+                     paddingTop="4"
+                     visible="{ monkeyRunnable != null &amp;&amp; monkeyRunnable.runState != 'none' }"/>
+
+            <s:Label text="{ monkeyRunnable.runState.toUpperCase() + ' (' + monkeyRunnable.runExecutionTime + ' ms)' }"
+                     includeInLayout="{ monkeyRunnable != null &amp;&amp; monkeyRunnable.runState != 'none' }"
+                     fontStyle="italic"
+                     paddingLeft="5"
+                     paddingRight="5"
+                     visible="{ monkeyRunnable != null &amp;&amp; monkeyRunnable.runState != 'none' }"/>
+
+
+            <s:Label text="Error Message: "
+                     includeInLayout="{ monkeyRunnable != null &amp;&amp; !(monkeyRunnable is MonkeyNode) &amp;&amp; monkeyRunnable.runState == 'error' }"
+                     fontWeight="bold"
+                     paddingTop="4"
+                     visible="{ monkeyRunnable != null &amp;&amp; !(monkeyRunnable is MonkeyNode) &amp;&amp; monkeyRunnable.runState == 'error' }"/>
+
+            <s:Label width="100%"
+                     text="{ monkeyRunnable.runTestErrorMsg }"
+                     includeInLayout="{ monkeyRunnable != null &amp;&amp; !(monkeyRunnable is MonkeyNode) &amp;&amp; monkeyRunnable.runState == 'error' }"
+                     fontStyle="italic"
+                     paddingLeft="5"
+                     paddingRight="5"
+                     maxDisplayedLines="2"
+                     visible="{ monkeyRunnable != null &amp;&amp; !(monkeyRunnable is MonkeyNode) &amp;&amp; monkeyRunnable.runState == 'error' }"/>
+
+
+            <s:Label text="Failure Message: "
+                     includeInLayout="{ monkeyRunnable != null &amp;&amp; !(monkeyRunnable is MonkeyNode) &amp;&amp; monkeyRunnable.runState == 'failure' }"
+                     fontWeight="bold"
+                     paddingTop="4"
+                     visible="{ monkeyRunnable != null &amp;&amp; !(monkeyRunnable is MonkeyNode) &amp;&amp; monkeyRunnable.runState == 'failure' }"/>
+
+            <s:Label width="100%"
+                     text="{ monkeyRunnable.runTestFailureMsg }"
+                     includeInLayout="{ monkeyRunnable != null &amp;&amp; !(monkeyRunnable is MonkeyNode) &amp;&amp; monkeyRunnable.runState == 'failure' }"
+                     fontStyle="italic"
+                     paddingLeft="5"
+                     paddingRight="5"
+                     maxDisplayedLines="2"
+                     visible="{ monkeyRunnable != null &amp;&amp; !(monkeyRunnable is MonkeyNode) &amp;&amp; monkeyRunnable.runState == 'failure' }"/>
+
+
+            <s:Label text="Snapshot: "
+                     fontWeight="bold"
+                     paddingTop="4"
+                     visible="{ monkeyRunnable != null
+					 &amp;&amp; isVerifyCommand
+					 &amp;&amp; (monkeyRunnable as VerifyMonkeyCommand).expectedSnapshot != null
+					 &amp;&amp; (monkeyRunnable as VerifyMonkeyCommand).verifyBitmap }"/>
+
+        </s:VGroup>
+
+    </s:Group>
+
+    <runner:TestRunnerSnapshotDetail y="{ this.contentGroup.height + 50 }"
+                                     width="{ this.width - 20 }"
+                                     height="{ this.height - (this.mainGroup.height + 75) }"
+                                     horizontalCenter="0"
+                                     monkeyRunnable="{ monkeyRunnable }"
+                                     visible="{ monkeyRunnable != null
+					&amp;&amp; isVerifyCommand
+					&amp;&amp; (monkeyRunnable as VerifyMonkeyCommand).expectedSnapshot != null
+					&amp;&amp; (monkeyRunnable as VerifyMonkeyCommand).verifyBitmap }"/>
+
+</s:Group>

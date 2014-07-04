@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark">
+
+    <s:Rect bottom="0"
+            left="0"
+            right="0"
+            top="0"
+            radiusX="3">
+        <s:fill>
+            <s:SolidColor color="#778899"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke color="#ffffff"
+                                weight="1.5"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Label text="Pausing"
+             color="#ffffff"
+             bottom="0"
+             fontSize="10"
+             left="0"
+             right="0"
+             textAlign="center"
+             top="3.5"/>
+
+</s:Group>

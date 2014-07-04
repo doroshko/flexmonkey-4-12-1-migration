@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:mx="library://ns.adobe.com/flex/mx"
+                xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+                xmlns:skins="com.gorillalogic.flexmonkey.views.skins.*"
+                width="100%"
+                minHeight="32"
+                creationComplete="create();"
+                dragComplete="dropCompleteHandler(event)"
+                dragDrop="dragDropHandler(event)"
+                dragEnter="dragEnterHandler(event)"
+                dragExit="dragExitHandler(event)"
+                dragOver="dragOverHandler(event)"
+                mouseOut="mouseOutHandler(event)"
+                rollOut="mouseOutHandler(event)"
+                autoDrawBackground="false"
+                contentBackgroundAlpha="0">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyNode;
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.core.MonkeyTest;
+            import com.gorillalogic.flexmonkey.core.MonkeyTestCase;
+            import com.gorillalogic.flexmonkey.core.MonkeyTestSuite;
+            import com.gorillalogic.flexmonkey.events.FMRunnerEvent;
+            import com.gorillalogic.flexmonkey.events.InteractionEvent;
+            import com.gorillalogic.flexmonkey.events.MonkeyNodeEvent;
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.utils.DragRequest;
+            import com.gorillalogic.flexmonkey.views.components.DragDownIndicator;
+            import com.gorillalogic.flexmonkey.views.components.DragUpIndicator;
+            import com.gorillalogic.flexmonkey.views.skins.TrashCanSkin;
+            import com.gorillalogic.framework.FMHub;
+			import com.gorillalogic.flexunit.FlexMonkeyConnectionRunner;
+
+            import mx.collections.ArrayCollection;
+            import mx.core.DragSource;
+            import mx.core.UIComponent;
+            import mx.events.DragEvent;
+            import mx.managers.DragManager;
+
+            import spark.events.RendererExistenceEvent;
+            import spark.layouts.supportClasses.DropLocation;
+
+            private const SUITE:String = "suite";
+            private const CASE:String = "case";
+            private const TEST:String = "test";
+
+            public static var allRunnablesLoaded:Boolean = false;
+            public static var runnableQueue:Array = [];
+            private var runnablesLoaded:Boolean = false;
+
+            [Bindable] private var myState:String;
+            [Bindable] private var monkeyNode:MonkeyNode;
+            [Bindable] private var openClose:Boolean = false;
+            [Bindable] private var showNavigator:Boolean = false;
+            [Bindable] private var dragSource:DragSource;
+            [Bindable] private var copyDragSource:DragSource;
+
+            [Bindable] private var backgroundColor:uint = 0xdddddd;
+            [Bindable] private var rolloverPadding:uint = 0;
+
+            public var monkeyNodeItemRenderers:ArrayCollection = new ArrayCollection();
+            public var monkeyRunnerItemRenderers:ArrayCollection;
+
+            private var dropUpIcon:DragUpIndicator;
+            private var dropDownIcon:DragDownIndicator;
+
+            private function create():void {
+                FMHub.instance.listen(InteractionEvent.EXPAND, expandHandler, this);
+                FMHub.instance.listen(InteractionEvent.COLLAPSE, collapseHandler, this);
+                FMHub.instance.listen(InteractionEvent.TILE_LAYOUT, tileRunnablesHandler, this);
+                FMHub.instance.listen(InteractionEvent.VERTICAL_LAYOUT, verticalRunnablesHandler, this);
+            }
+
+            override public function set data(value:Object):void {
+                if (value != null && monkeyNode != value) {
+                    monkeyNode = value as MonkeyNode;
+
+                    dragSource = new DragSource();
+                    dragSource.addData(monkeyNode, DragRequest.DATA)
+
+                    copyDragSource = new DragSource();
+                    copyDragSource.addData(monkeyNode, DragRequest.DATA);
+                    copyDragSource.addData(DragRequest.COPY_MONKEY_NODE, DragRequest.TYPE);
+
+                    var newState:String;
+                    rolloverPadding = 0;
+
+                    if (monkeyNode is MonkeyTestSuite) {
+                        newState = SUITE;
+                        dragSource.addData(DragRequest.MOVE_MONKEY_SUITE, DragRequest.TYPE);
+                        backgroundColor = 0xdddddd;
+                        rolloverPadding = 1;
+
+                        // add here for startup performance gain
+                        this.addElement(childList);
+
+                        iconImage.source = Assets.suiteImageClass;
+                        iconImage.top = 3;
+                    } else if (monkeyNode is MonkeyTestCase) {
+                        newState = CASE;
+                        dragSource.addData(DragRequest.MOVE_MONKEY_CASE, DragRequest.TYPE);
+                        backgroundColor = 0xffffff;
+
+                        // add here for startup performance gain
+                        this.addElement(childList);
+
+                        iconImage.source = Assets.caseImageClass;
+                        iconImage.top = 4;
+                    } else if (monkeyNode is MonkeyTest) {
+                        newState = TEST;
+                        dragSource.addData(DragRequest.MOVE_MONKEY_TEST, DragRequest.TYPE);
+                        backgroundColor = 0xffffff;
+
+                        // add here for startup performance gain
+                        if (!ApplicationModel.instance.isVerticalLayout) {
+                            runnerList.layout = runnerTileLayout;
+                        }
+
+                        iconImage.source = Assets.testImageClass;
+                        iconImage.top = 4;
+                    }
+
+                    if (myState != newState) {
+                        myState = newState;
+                    }
+
+                    //update open close state
+                    openClose = monkeyNode.startItemRendererExpanded;
+                    monkeyNode.startItemRendererExpanded = true;
+                }
+            }
+
+
+            private function expandHandler(event:InteractionEvent):void {
+                if (event.monkeyNodeTarget == null) {
+                    openClose = true;
+
+                    // click expand all at top level (i.e. no node)
+                    // defer adding runnable items
+                    if (monkeyNode is MonkeyTest && !runnablesLoaded) {
+                        runnableQueue.push(this);
+                    }
+                } else {
+                    if (event.monkeyNodeTarget is MonkeyTestSuite &&
+                        ((monkeyNode.parent != null && (monkeyNode.parent as MonkeyNode).isEqualTo(event.monkeyNodeTarget)) ||
+                        (monkeyNode.parent.parent != null && (monkeyNode.parent.parent as MonkeyNode).isEqualTo(event.monkeyNodeTarget)))) {
+                        openClose = true;
+                    } else if (event.monkeyNodeTarget is MonkeyTestCase &&
+                        monkeyNode.parent != null &&
+                        (monkeyNode.parent as MonkeyNode).isEqualTo(event.monkeyNodeTarget)) {
+                        openClose = true;
+                    } else if (event.monkeyNodeTarget is MonkeyTest &&
+                        monkeyNode.isEqualTo(event.monkeyNodeTarget)) {
+                        openClose = true;
+                    }
+
+                    loadRunnables();
+                }
+
+            }
+
+            private function collapseHandler(event:InteractionEvent):void {
+                if (event.monkeyNodeTarget == null) {
+                    openClose = false;
+                } else if (event.monkeyNodeTarget is MonkeyTestSuite &&
+                    monkeyNode.parent != monkeyNode &&
+                    ((monkeyNode.parent != null && (monkeyNode.parent as MonkeyNode).isEqualTo(event.monkeyNodeTarget)) ||
+                    (monkeyNode.parent.parent != null && (monkeyNode.parent.parent as MonkeyNode).isEqualTo(event.monkeyNodeTarget)))) {
+                    openClose = false;
+                } else if (event.monkeyNodeTarget is MonkeyTestCase &&
+                    monkeyNode.parent != null &&
+                    (monkeyNode.parent as MonkeyNode).isEqualTo(event.monkeyNodeTarget)) {
+                    openClose = false;
+                } else if (event.monkeyNodeTarget is MonkeyTest &&
+                    monkeyNode.isEqualTo(event.monkeyNodeTarget)) {
+                    openClose = false;
+                }
+            }
+
+            private function openCloseButtonClickHandler(event:MouseEvent):void {
+                openClose = openClose ? false : true;
+                loadRunnables();
+            }
+
+            public function loadRunnables():void {
+                if (openClose && monkeyNode is MonkeyTest && !runnablesLoaded) {
+                    runnablesLoaded = true;
+                    this.addElement(runnerList);
+                }
+            }
+
+            protected function mouseOverHandler(event:MouseEvent):void {
+                if (!DragManager.isDragging) {
+                    showNavigator = true;
+
+                    if (!headerGroup.contains(navigationGroup)) {
+                        headerGroup.addElement(navigationGroup);
+                    }
+
+                    if (!headerGroup.contains(handle)) {
+                        headerGroup.addElement(handle);
+                    }
+                }
+            }
+
+            protected function mouseOutHandler(event:MouseEvent):void {
+                showNavigator = false;
+            }
+
+            private function childListRendererAddHandler(event:RendererExistenceEvent):void {
+                monkeyNodeItemRenderers.addItemAt(event.renderer, event.index);
+            }
+
+            private function runnerListRendererAddHandler(event:RendererExistenceEvent):void {
+                if (monkeyRunnerItemRenderers == null) {
+                    monkeyRunnerItemRenderers = new ArrayCollection();
+                }
+
+                monkeyRunnerItemRenderers.addItemAt(event.renderer, event.index);
+            }
+
+            private function tileRunnablesHandler(event:InteractionEvent):void {
+                if (runnerList != null) {
+                    runnerList.layout = runnerTileLayout;
+                }
+            }
+
+            private function verticalRunnablesHandler(event:InteractionEvent):void {
+                if (runnerList != null) {
+                    runnerList.layout = runnerVerticalLayout;
+                }
+            }
+
+            //
+            // bus events...
+            //
+
+            protected function deleteButtonClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.CONFIRM_DELETE_MONKEY_RUNNABLE, monkeyNode));
+            }
+
+            protected function editButtonClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new MonkeyNodeEvent(MonkeyNodeEvent.EDIT_MONKEY_NODE, monkeyNode));
+            }
+
+            protected function playPauseButtonClickHandler(event:MouseEvent):void {
+				FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.SETUP_TEST_RUNNER, monkeyNode));
+            }
+
+            protected function collapseClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new InteractionEvent(InteractionEvent.COLLAPSE, monkeyNode));
+            }
+
+            protected function expandClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new InteractionEvent(InteractionEvent.EXPAND, monkeyNode));
+            }
+
+            //
+            // drag and drop handlers for creating new suites, cases, and tests
+            //
+
+            private function dropCompleteHandler(event:DragEvent):void {
+                if (dropUpIcon != null) {
+                    dropUpIcon.visible = false;
+                }
+
+                if (dropDownIcon != null) {
+                    dropDownIcon.visible = false;
+                }
+            }
+
+            private function dragDropHandler(event:DragEvent):void {
+                if (dropUpIcon != null) {
+                    dropUpIcon.visible = false;
+                }
+
+                if (dropDownIcon != null) {
+                    dropDownIcon.visible = false;
+                }
+
+                var dragType:String = event.dragSource.dataForFormat(DragRequest.TYPE) as String;
+                var dragData:Object = event.dragSource.dataForFormat(DragRequest.DATA);
+
+                if (DragRequest.isMonkeyNodeValidDrag(dragType, myState, dragData as MonkeyNode) &&
+                    (dragType == DragRequest.COPY_MONKEY_NODE || monkeyNode != dragData)) {
+
+                    if (myState == SUITE &&
+                        (dragType == DragRequest.NEW_SUITE || dragType == DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_SUITE)) {
+                        var suiteIndex:int = ProjectTestModel.instance.suites.getItemIndex(monkeyNode);
+
+                        if (isBottomHalf(event)) {
+                            suiteIndex++;
+                        }
+
+                        if (dragType == DragRequest.NEW_SUITE) {
+                            FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_TEST_SUITE, suiteIndex));
+                        } else if (dragType == DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_SUITE) {
+                            FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_SUITE_FROM_RECORD_ITEMS, suiteIndex));
+                        }
+
+                    } else if (myState == CASE &&
+                        (dragType == DragRequest.NEW_CASE || dragType == DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_CASE)) {
+                        var caseParentNode:MonkeyNode = monkeyNode.parent as MonkeyNode;
+                        var caseIndex:int = caseParentNode.children.getItemIndex(monkeyNode);
+
+                        if (isBottomHalf(event)) {
+                            caseIndex++;
+                        }
+
+                        if (dragType == DragRequest.NEW_CASE) {
+                            FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_TEST_CASE, caseIndex, caseParentNode));
+                        } else if (dragType == DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_CASE) {
+                            FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_CASE_FROM_RECORD_ITEMS, caseIndex, caseParentNode));
+                        }
+
+                    } else if (myState == TEST &&
+                        (dragType == DragRequest.NEW_TEST || dragType == DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_TEST)) {
+                        var testParentNode:MonkeyNode = monkeyNode.parent as MonkeyNode;
+                        var testIndex:int = testParentNode.children.getItemIndex(monkeyNode);
+
+                        if (isBottomHalf(event)) {
+                            testIndex++;
+                        }
+
+                        if (dragType == DragRequest.NEW_TEST) {
+                            FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_TEST, testIndex, testParentNode));
+                        } else if (dragType == DragRequest.MOVE_ALL_RECORDED_ITEMS_TO_TEST) {
+                            FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_TEST_FROM_RECORD_ITEMS, testIndex, testParentNode));
+                        }
+
+                    } else if ((dragType == DragRequest.MOVE_MONKEY_SUITE && myState == SUITE) ||
+                        (dragType == DragRequest.MOVE_MONKEY_CASE && myState == CASE) ||
+                        (dragType == DragRequest.MOVE_MONKEY_TEST && myState == TEST) ||
+                        dragType == DragRequest.COPY_MONKEY_NODE) {
+
+                        var parentCollection:ArrayCollection;
+                        var pn:MonkeyNode;
+
+                        if (monkeyNode is MonkeyTestSuite) {
+                            parentCollection = ProjectTestModel.instance.suites;
+                        } else {
+                            pn = monkeyNode.parent as MonkeyNode;
+                            parentCollection = pn.children;
+                        }
+
+                        var dropIndex:int = parentCollection.getItemIndex(monkeyNode);
+
+                        if (isBottomHalf(event)) {
+                            dropIndex++;
+                        }
+
+                        if (dragType == DragRequest.COPY_MONKEY_NODE) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createCopyEvent(dragData as MonkeyRunnable, pn, dropIndex));
+                        } else {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMoveEvent(dragData as MonkeyRunnable, pn, dropIndex));
+                        }
+                    }
+
+                } else if (monkeyNode.children.length == 0) {
+
+                    if (dragType == DragRequest.NEW_CASE && myState == SUITE) {
+                        FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_TEST_CASE, 0, monkeyNode));
+
+                    } else if (dragType == DragRequest.NEW_TEST && myState == CASE) {
+                        FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_TEST, 0, monkeyNode));
+
+                    } else if (DragRequest.isRunnableDrag(dragType) && myState == TEST) {
+
+                        if (dragType == DragRequest.MOVE_MONKEY_RUNNABLE) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMoveEvent(dragData as MonkeyRunnable, monkeyNode, 0));
+                        } else if (dragType == DragRequest.COPY_MONKEY_RUNNABLE) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createCopyEvent(dragData as MonkeyRunnable, monkeyNode, 0));
+                        } else if (dragType == DragRequest.NEW_PAUSE) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_PAUSE, monkeyNode, 0));
+                        } else if (dragType == DragRequest.NEW_VERIFY) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_VERIFY, monkeyNode, 0));
+                        } else if (dragType == DragRequest.NEW_VERIFY_GRID) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_VERIFY_GRID, monkeyNode, 0));
+                        } else if (dragType == DragRequest.NEW_VERIFY_PROP) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_VERIFY_PROP, monkeyNode, 0));
+                        } else if (dragType == DragRequest.NEW_SET_PROPERTY_CMD) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_SET_PROPERTY_CMD, monkeyNode, 0));
+                        } else if (dragType == DragRequest.NEW_STORE_VALUE_CMD) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_STORE_VALUE_CMD, monkeyNode, 0));
+                        } else if (dragType == DragRequest.NEW_FUNCTION_CMD) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_FUNCTION_CMD, monkeyNode, 0));
+                        } else if (dragType == DragRequest.MOVE_ALL_RECORDED_ITEMS) {
+                            FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.MOVE_ALL_RECORDED_ITEMS, monkeyNode, 0));
+                        }
+                    } else if ((dragType == DragRequest.MOVE_MONKEY_CASE && myState == SUITE) ||
+                        (dragType == DragRequest.MOVE_MONKEY_TEST && myState == CASE)) {
+
+                        FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMoveEvent(dragData as MonkeyRunnable, monkeyNode, 0));
+
+                    }
+                }
+            }
+
+            private function dragEnterHandler(event:DragEvent):void {
+                monkeyNode.startItemRendererExpanded = openClose;
+                var dragType:String = event.dragSource.dataForFormat(DragRequest.TYPE) as String;
+                var dragData:Object = event.dragSource.dataForFormat(DragRequest.DATA);
+
+                if ((DragRequest.isMonkeyNodeValidDrag(dragType, myState, dragData as MonkeyNode) &&
+                    (dragType == DragRequest.COPY_MONKEY_NODE || monkeyNode != dragData))) {
+                    DragManager.acceptDragDrop(event.currentTarget as UIComponent);
+
+                } else if (monkeyNode.children.length == 0) {
+
+                    if ((DragRequest.isRunnableDrag(dragType) && myState == TEST) ||
+                        (dragType == DragRequest.NEW_CASE && myState == SUITE) ||
+                        (dragType == DragRequest.NEW_TEST && myState == CASE)) {
+                        DragManager.acceptDragDrop(event.currentTarget as UIComponent);
+                    }
+
+                    if ((dragType == DragRequest.MOVE_MONKEY_CASE && myState == SUITE) ||
+                        (dragType == DragRequest.MOVE_MONKEY_TEST && myState == CASE)) {
+                        DragManager.acceptDragDrop(event.currentTarget as UIComponent);
+                    }
+                }
+            }
+
+            private function dragOverHandler(event:DragEvent):void {
+                var dragType:String = event.dragSource.dataForFormat(DragRequest.TYPE) as String;
+                var dragData:Object = event.dragSource.dataForFormat(DragRequest.DATA);
+                var e:Boolean = monkeyNode.isEqualTo(dragData);
+
+                if (DragRequest.isMonkeyNodeValidDrag(dragType, myState, dragData as MonkeyNode) &&
+                    (dragType == DragRequest.COPY_MONKEY_NODE || monkeyNode != dragData)) {
+
+                    // add here for startup performance gain
+                    if (dropUpIcon == null) {
+                        dropUpIcon = new DragUpIndicator();
+                        dropUpIcon.visible = false;
+                        this.addElement(dropUpIcon);
+                    }
+
+                    // add here for startup performance gain
+                    if (dropDownIcon == null) {
+                        dropDownIcon = new DragDownIndicator();
+                        dropDownIcon.visible = false;
+                        this.addElement(dropDownIcon);
+                    }
+
+                    if (isBottomHalf(event)) {
+                        dropDownIcon.visible = true;
+                        dropUpIcon.visible = false;
+                    } else {
+                        dropUpIcon.visible = true;
+                        dropDownIcon.visible = false;
+                    }
+                }
+            }
+
+            private function dragExitHandler(event:DragEvent):void {
+                if (dropUpIcon != null) {
+                    dropUpIcon.visible = false;
+                }
+
+                if (dropDownIcon != null) {
+                    dropDownIcon.visible = false;
+                }
+            }
+
+            private function isBottomHalf(event:DragEvent):Boolean {
+                var pos:DropLocation = event.currentTarget.layout.calculateDropLocation(event);
+                var half:int = this.height / 2;
+
+                if (pos.dropPoint.y < half) {
+                    return false;
+                }
+                return true;
+            }
+
+            override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+                super.updateDisplayList(unscaledWidth, unscaledHeight);
+
+                if (runnerList != null && runnerList.layout == runnerTileLayout) {
+                    setTileCount();
+                }
+            }
+
+            private function setTileCount():void {
+                if (myState == TEST && runnerList.layout == runnerTileLayout) {
+                    var listWidth:int = runnerList.measuredWidth;
+                    var maxRows:int = ((this.width - 20) / 195);
+
+                    if (maxRows != runnerTileLayout.requestedColumnCount) {
+                        runnerTileLayout.requestedColumnCount = maxRows;
+                    }
+                }
+            }
+        ]]>
+    </fx:Script>
+
+
+    <fx:Declarations>
+        <s:TileLayout id="runnerTileLayout"
+                      horizontalGap="4"
+                      verticalGap="4"
+                      columnWidth="195"
+                      orientation="columns"/>
+
+        <s:VerticalLayout id="runnerVerticalLayout"
+                          gap="3"/>
+
+        <s:DataGroup id="childList"
+                     dataProvider="{ monkeyNode.children }"
+                     includeInLayout="{ openClose }"
+                     bottom="10"
+                     left="10"
+                     right="10"
+                     top="30"
+                     itemRenderer="com.gorillalogic.flexmonkey.views.renderers.TestMonkeyNodeItemRenderer"
+                     visible="{ openClose }"
+                     rendererAdd="childListRendererAddHandler(event)">
+            <s:layout>
+                <s:VerticalLayout gap="10"/>
+            </s:layout>
+        </s:DataGroup>
+
+        <s:DataGroup id="runnerList"
+                     dataProvider="{ monkeyNode.children }"
+                     includeInLayout="{ openClose }"
+                     layout="{ runnerVerticalLayout }"
+                     bottom="10"
+                     left="10"
+                     right="10"
+                     top="35"
+                     itemRenderer="com.gorillalogic.flexmonkey.views.renderers.TestRunnableItemRenderer"
+                     visible="{ openClose }"
+                     rendererAdd="runnerListRendererAddHandler(event)"/>
+
+        <!-- drag and drop  3 bar handle -->
+        <components:DragComponent id="handle"
+                                  horizontalCenter="0"
+                                  top="6"
+                                  monkeyRunnable="{ monkeyNode }"
+                                  dragSource="{ dragSource }"
+                                  visible="{ showNavigator }"/>
+
+        <s:HGroup id="navigationGroup"
+                  horizontalAlign="right"
+                  right="0"
+                  top="5"
+                  verticalAlign="top"
+                  visible="{ showNavigator }">
+
+            <s:Button toolTip="Expand All Children"
+                      click="expandClickHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.ExpandButtonSkin"/>
+
+            <s:Button toolTip="Collapse All Children"
+                      click="collapseClickHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.CollapseButtonSkin"/>
+
+            <components:DragComponent id="copyButton"
+                                      toolTip="Drag to Copy Command"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.CopySkin"
+                                      dragSource="{ copyDragSource }"/>
+
+            <components:PlayPauseButton id="playPauseButton"
+                                        width="20"
+                                        height="20"
+                                        toolTip="Play Item"
+                                        click="playPauseButtonClickHandler(event)"/>
+
+            <s:Button id="deleteButton"
+                      toolTip="Delete Item"
+                      click="deleteButtonClickHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.TrashCanSkin"/>
+        </s:HGroup>
+    </fx:Declarations>
+
+    <s:Rect bottom="0"
+            left="0"
+            right="0"
+            top="0"
+            topLeftRadiusX="6"
+            bottomLeftRadiusX="6"
+            bottomRightRadiusX="6">
+        <s:fill>
+            <s:SolidColor color="{ backgroundColor }"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke color="#333333"
+                                weight="1"/>
+        </s:stroke>
+    </s:Rect>
+
+
+    <s:Rect bottom="1"
+            left="1"
+            right="1"
+            top="1"
+            topLeftRadiusX="6"
+            bottomLeftRadiusX="6"
+            bottomRightRadiusX="6"
+            visible="{ myState == SUITE || myState == CASE }">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry color="#eeeeee"
+                                 alpha=".4"/>
+                <s:GradientEntry color="#dddddd"
+                                 alpha=".8"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Rect>
+
+    <!-- open close button -->
+    <components:OpenCloseButton id="openCloseButton"
+                                click="openCloseButtonClickHandler(event)"
+                                open="{ openClose }"/>
+
+    <s:Group id="headerGroup"
+             left="30"
+             right="10"
+             top="0"
+             mouseOver="mouseOverHandler(event)"
+             mouseOut="mouseOutHandler(event)"
+             rollOut="mouseOutHandler(event)"
+             rollOver="mouseOverHandler(event)"
+			doubleClick="editButtonClickHandler(event)">
+        <!-- icon -->
+        <mx:Image id="iconImage"
+                  left="0"
+                  top="1"/>
+        <!-- node name -->
+        <s:Label id="monkeyNodeName"
+                 text="{ monkeyNode.name } {monkeyNode.ignore ? '(Ignored)' : ''}"
+                 doubleClickEnabled="true"
+                 fontSize="11"
+                 fontWeight="bold"
+                 left="28"
+                 top="11"
+                 doubleClick="editButtonClickHandler(event)"/>
+    </s:Group>
+
+</s:ItemRenderer>

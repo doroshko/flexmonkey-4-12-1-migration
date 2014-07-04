@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.events.SnapshotEvent;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.binding.utils.BindingUtils;
+            import mx.core.FlexGlobals;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable] public var buttonFontSize:int = 11;
+            [Bindable] public var topBottomPadding:int = 0;
+            [Bindable] public var buttonPadding:int = 0;
+            [Bindable] public var isSmall:Boolean = true;
+
+            private var _monkeyRunnable:MonkeyRunnable;
+
+            [Bindable] public function get monkeyRunnable():MonkeyRunnable {
+                return this._monkeyRunnable;
+            }
+
+            public function set monkeyRunnable(value:MonkeyRunnable):void {
+                snapshotButtonBar.selectedIndex = 0;
+
+                this._monkeyRunnable = value;
+            }
+
+            protected function snapshotButtonBarChangeHandler(event:IndexChangeEvent):void {
+                if (event.newIndex == 0) {
+                    BindingUtils.bindProperty(snapshotImage, "data", monkeyRunnable, [ "expectedSnapshot", "displayPng" ]);
+                } else {
+                    BindingUtils.bindProperty(snapshotImage, "data", monkeyRunnable, [ "runActualSnapshot", "displayPng" ]);
+                }
+            }
+
+            protected function doubleClickHandler(event:MouseEvent):void {
+                if (isSmall) {
+                    FMHub.instance.dispatchEvent(new SnapshotEvent(SnapshotEvent.DISPLAY_SNAPSHOT, monkeyRunnable as VerifyMonkeyCommand));
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Group left="0"
+             right="0"
+             doubleClickEnabled="true"
+             doubleClick="doubleClickHandler(event)">
+
+        <s:Rect left="0"
+                right="0"
+                top="0"
+                bottom="0"
+                bottomLeftRadiusX="4"
+                bottomRightRadiusX="4"
+                visible="{isSmall}">
+            <s:fill>
+                <s:SolidColor color="#efefef"/>
+            </s:fill>
+            <s:stroke>
+                <s:SolidColorStroke color="#333333"/>
+            </s:stroke>
+        </s:Rect>
+
+        <s:ButtonBar id="snapshotButtonBar"
+                     change="snapshotButtonBarChangeHandler(event)"
+                     height="{20+buttonPadding}"
+                     width="100%"
+                     fontSize="{buttonFontSize}">
+            <s:ArrayCollection>
+                <fx:String>Expected</fx:String>
+                <fx:String>Actual</fx:String>
+            </s:ArrayCollection>
+        </s:ButtonBar>
+
+        <mx:Image id="snapshotImage"
+                  data="{(monkeyRunnable as VerifyMonkeyCommand).expectedSnapshot.displayPng}"
+                  maxWidth="{this.width - 75}"
+                  maxHeight="{this.width - 75}"
+                  maintainAspectRatio="true"
+                  top="{25+topBottomPadding}"
+                  bottom="{5+topBottomPadding}"
+                  horizontalCenter="0"/>
+    </s:Group>
+
+</s:Group>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.events.*;
+			
+			import mx.automation.IAutomationObject;
+			import mx.core.UIComponent;
+			
+			private function launchQuoteOMatic_click_handler(event:Event):void {
+				var url:String = "QuoteOMatic.swf";  // the SWF at this URL does NOT have FlexMonkey linked into it
+				
+				try {
+					// loader1.load(urlReq);
+					swfloader.load(url);
+				} catch(error:Error) {
+					trace(error.message);
+				}
+				
+			}
+			
+			private function unloadQuoteOMatic_click_handler(event:Event):void {
+				try {
+					swfloader.unloadAndStop();
+				} catch(error:Error) {
+					trace(error.message);
+				}				
+			}
+			
+			private function defaultHandler(event:Event):void {
+				trace(event.type);
+				var target:Object=event.target;
+				if (target!=null) {
+					trace(target);
+				}
+			}
+			
+			private function completeHandler(event:Event):void {
+				defaultHandler(event);
+			}
+			
+			private function ioErrorHandler(event:Event):void {
+				defaultHandler(event);
+			}
+			
+			private function securityErrorHandler(event:Event):void {
+				defaultHandler(event);
+			}
+			
+			private function httpStatusHandler(event:Event):void {
+				defaultHandler(event);
+			}
+			
+			private function progressHandler(event:Event):void {
+				//defaultHandler(event);
+			}	
+			
+		]]>
+	</fx:Script>
+	
+	<s:VGroup>
+		<s:HGroup>
+			<s:Button label="launch Quote-o-matic" click="launchQuoteOMatic_click_handler(event)"/>
+			<s:Button label="unload Quote-o-matic" click="unloadQuoteOMatic_click_handler(event)"/>
+		</s:HGroup>
+		<mx:SWFLoader id="swfloader"
+					  width="700"
+					  height="500"
+					  complete="completeHandler(event)"
+					  progress="progressHandler(event)"
+					  ioError="ioErrorHandler(event)"
+					  securityError="securityErrorHandler(event)"
+					  httpStatus="httpStatusHandler(event)"
+					  init="defaultHandler(event)"
+					  open="defaultHandler(event)"
+					  unload="defaultHandler(event)"
+		/> 
+	</s:VGroup>
+</s:Application>

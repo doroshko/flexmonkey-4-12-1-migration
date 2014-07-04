@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         initialize="initializeHandler()"
+         width="127"
+         height="70">
+
+    <s:states>
+        <s:State name="base"/>
+        <s:State name="connected"/>
+    </s:states>
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.model.ApplicationModel;
+			import com.gorillalogic.flexmonkey.utils.Assets;
+
+			import mx.binding.utils.ChangeWatcher;
+
+            [Bindable] private var model:ApplicationModel = ApplicationModel.instance;
+
+            private function initializeHandler():void {
+                setState();
+                ChangeWatcher.watch(model, "isConnected", isConnectedChangeHandler);
+            }
+
+            private function isConnectedChangeHandler(event:Event):void {
+                setState();
+            }
+
+            private function setState():void {
+                if (model.isConnected) {
+                    currentState = "connected";
+                } else {
+                    currentState = "base";
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:transitions>
+        <s:Transition id="transition">
+            <s:Wipe direction="down"
+                    target="{gorillaImgHolder}"
+                    duration="1000"/>
+        </s:Transition>
+    </s:transitions>
+
+    <s:Group id="gorillaImgHolder"
+             top="10"
+             left="10"
+             width="105">
+
+        <s:Group id="notConnectedGroup"
+                 visible="true"
+                 visible.connected="false"
+                 top="0"
+                 left="0"
+                 width="105"
+                 cacheAsBitmap="true">
+
+            <s:Label text="Monkey Link Connection Status"
+                     width="70"
+                     maxDisplayedLines="3"
+                     fontSize="11"
+                     color="#333333"/>
+
+            <s:BitmapImage source="{ Assets.gorillaHeadImageClass }"
+                           alpha=".5"
+                           right="0"/>
+
+            <s:Label text="NOT CONNECTED"
+                     fontWeight="bold"
+                     color="#858383"
+                     top="43"
+                     width="105"
+                     textAlign="center">
+                <s:filters>
+                    <s:DropShadowFilter blurX="1"
+                                        blurY="1"
+                                        distance="1"
+                                        color="#0000000"
+                                        alpha="0.3"/>
+                </s:filters>
+            </s:Label>
+        </s:Group>
+
+        <s:Group id="connectedGroup"
+                 visible="false"
+                 visible.connected="true"
+                 top="0"
+                 left="0"
+                 width="105"
+                 cacheAsBitmap="true">
+
+            <s:Label text="Monkey Link Connection Status"
+                     width="70"
+                     maxDisplayedLines="3"
+                     fontSize="11"
+                     color="#000000"/>
+
+            <s:BitmapImage source="{ Assets.gorillaHeadEyesImageClass }"
+                           right="0"/>
+
+            <s:Label text="CONNECTED"
+                     fontWeight="bold"
+                     color="#376607"
+                     top="43"
+                     left="0"
+                     width="105"
+                     textAlign="center">
+                <s:filters>
+                    <s:DropShadowFilter blurX="1"
+                                        blurY="1"
+                                        distance="1"
+                                        color="#0000000"
+                                        alpha="0.3"/>
+                </s:filters>
+            </s:Label>
+        </s:Group>
+
+    </s:Group>
+
+
+
+</s:Group>

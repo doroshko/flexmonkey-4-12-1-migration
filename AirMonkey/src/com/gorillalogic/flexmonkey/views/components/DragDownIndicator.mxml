@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         visible="false"
+         bottom="0"
+         horizontalCenter="0">
+
+    <s:Path>
+        <s:data>M 0,0 L 10,0 5,10 0,0 Z</s:data>
+        <s:fill>
+            <s:SolidColor color="#ff0000"/>
+        </s:fill>
+    </s:Path>
+
+</s:Group>

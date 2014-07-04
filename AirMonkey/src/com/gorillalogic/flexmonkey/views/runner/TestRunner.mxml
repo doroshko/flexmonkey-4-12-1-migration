@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    xmlns:runner="com.gorillalogic.flexmonkey.views.runner.*"
+                    creationComplete="create()"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="FlexMonkey Test Runner :: { model.testRunDesc }">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.events.FMRunnerEvent;
+            import com.gorillalogic.flexmonkey.events.PayloadEvent;
+            import com.gorillalogic.flexmonkey.events.RecordEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.flexmonkey.model.RunnerModel;
+            import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+            import com.gorillalogic.flexmonkey.views.skins.TestRunnerListSkin;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.binding.utils.ChangeWatcher;
+
+            import spark.events.RendererExistenceEvent;
+
+            private const ITEM_RENDERER_GUARD_COUNT:int = 6;
+            private var renderersAdded:Boolean;
+
+            [Bindable] private var model:RunnerModel;
+            [Bindable] private var applicationModel:ApplicationModel;
+            [Bindable] private var selectedResultItem:MonkeyRunnable;
+            [Bindable] private var progessPercentage:Number;
+            [Bindable] private var selectedItemAlpha:Number = .5;
+            [Bindable] private var runnerPanelWidth:int = 460;
+
+            private function create():void {
+                model = RunnerModel.instance;
+                applicationModel = ApplicationModel.instance;
+
+                ChangeWatcher.watch(model, "currentItemCount", currentItemCountHandler);
+                ChangeWatcher.watch(model, "isRunning", runningChangeHandler);
+                addEventListener("selectItemResult", selectItemResultHandler);
+            }
+
+            override public function openPopup(state:String = null):void {
+                super.openPopup(state);
+                selectedResultItem = null;
+                selectedItemAlpha = .5;
+                showErrorsCheckbox.selected = false;
+            }
+
+            private function selectItemResultHandler(event:PayloadEvent):void {
+                setItem(event.data as MonkeyRunnable);
+            }
+
+            private function runningChangeHandler(event:Event):void {
+                if (model.isRunning) {
+                    currentState = "running";
+                } else {
+                    currentState = "off";
+                }
+            }
+
+            private function currentItemCountHandler(event:Event):void {
+                if (model.testItemQueue != null && model.testItemQueue.length >= model.currentItemCount) {
+                    var c:int = model.currentItemCount;
+                    progessPercentage = (c / model.total);
+
+                    if (renderersAdded && itemList.dataProvider != null && itemList.dataProvider.length > model.currentItemCount) {
+                        try {
+                            itemList.ensureIndexIsVisible(model.currentItemCount);
+                        } catch (e:Error) {
+                            //ignore
+                        }
+                    }
+
+                    setItem(model.resultItem);
+                }
+            }
+
+            private function setItem(r:MonkeyRunnable):void {
+                selectedResultItem = r;
+
+                if (selectedResultItem != null) {
+                    selectedItemAlpha = 1;
+                } else {
+                    selectedItemAlpha = .5;
+                }
+            }
+
+            override public function closeClickHander(evetn:MouseEvent):void {
+                if (model.isRunning) {
+                    FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.ABORT_RUNNER));
+                }
+
+                if (model.wasRecording) {
+                    model.wasRecording = false;
+                    FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.START_RECORDING));
+                }
+
+                FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.CLEAR_RUNNER_RESULTS));
+                closePopup();
+            }
+
+            protected function showErrorsCheckboxChangeHandler(event:Event):void {
+                selectedResultItem = null;
+
+                if (showErrorsCheckbox.selected) {
+                    model.applyErrorFailureFilter();
+                } else {
+                    model.removeErrorFailureFilter();
+                }
+            }
+
+            protected function playAbortClickHandler(event:MouseEvent):void {
+                if (!model.isRunning) {
+                    if (ApplicationModel.instance.isConnected) {
+                        showErrorsCheckbox.selected = false;
+                        FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.START_RUNNER));
+                    }
+                } else {
+                    FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.ABORT_RUNNER));
+                }
+            }
+
+            protected function clearResultsClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.CLEAR_RUNNER_RESULTS));
+            }
+
+            [Bindable] public var detailPanelWidth:int;
+
+            override protected function updateDisplayList(w:Number, h:Number):void {
+                super.updateDisplayList(w, h);
+
+                runnerPanelWidth = (mainGroup.width * .65) - 4;
+                detailPanelWidth = (mainGroup.width * .35) - 4;
+            }
+
+            protected function itemListRendererAddHandler(event:RendererExistenceEvent):void {
+                if (event.index > ITEM_RENDERER_GUARD_COUNT || event.index <= itemList.dataProvider.length) {
+                    renderersAdded = true;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <containers:states>
+        <s:State name="off"/>
+        <s:State name="running"/>
+    </containers:states>
+
+    <s:Group id="mainGroup"
+             width="{ this.width - 100 }"
+             height="{ this.height - 100 }">
+
+        <s:HGroup bottom="165"
+                  left="0"
+                  right="0"
+                  top="5"
+                  gap="8">
+
+            <!-- column one -->
+            <s:VGroup width="{ runnerPanelWidth }"
+                      height="100%">
+
+                <!-- runner nav -->
+                <s:Group width="100%"
+                         height="25">
+
+                    <!-- play / abort -->
+                    <s:Button width="85"
+                              enabled="{ ApplicationModel.instance.isConnected }"
+                              label.off="Play"
+                              label.running="Abort"
+                              left="0"
+                              top="8"
+                              click="playAbortClickHandler(event)"
+                              skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+
+                    <s:Label text="Not Connected"
+                             fontStyle="italic"
+                             fontWeight="bold"
+                             left="95"
+                             top="14"
+                             visible="{ !ApplicationModel.instance.isConnected }"/>
+
+                    <!-- failure / errors -->
+                    <s:HGroup bottom="0"
+                              horizontalAlign="right"
+                              right="0"
+                              top="0"
+                              verticalAlign="bottom"
+                              gap="4">
+
+                        <components:FailureIcon width="14"
+                                                height="14"/>
+                        <s:Label text="Failures:"
+                                 fontWeight="bold"/>
+                        <s:Label text="{ model.failureCount }"/>
+
+                        <mx:Spacer width="8"/>
+
+                        <components:ErrorIcon width="14"
+                                              height="14"/>
+                        <s:Label text="Errors:"
+                                 fontWeight="bold"/>
+                        <s:Label text="{ model.errorCount }"/>
+                    </s:HGroup>
+                </s:Group>
+
+                <s:Group width="100%"
+                         height="100%">
+
+                    <!-- test items -->
+                    <s:Group height="22"
+                             left="0"
+                             right="0"
+                             top="0">
+                        <s:Rect bottom="0"
+                                left="0"
+                                right="0"
+                                top="0">
+                            <s:fill>
+                                <s:SolidColor color="#555555"/>
+                            </s:fill>
+                        </s:Rect>
+
+                        <s:Label text="Test Items"
+                                 color="#ffffff"
+                                 bottom="4"
+                                 fontWeight="bold"
+                                 left="5"
+                                 right="0"
+                                 textAlign="left"
+                                 top="0"
+                                 verticalAlign="bottom"/>
+
+                        <s:Label text="Show only Error / Failure Items: "
+                                 color="#ffffff"
+                                 fontSize="10"
+                                 right="24"
+                                 top="7.5"/>
+                        <s:CheckBox id="showErrorsCheckbox"
+                                    enabled="{ !model.isRunning }"
+                                    right="0"
+                                    top="2"
+                                    change="showErrorsCheckboxChangeHandler(event)"/>
+
+                    </s:Group>
+
+                    <!-- test items -->
+                    <s:List id="itemList"
+                            dataProvider="{ model.testItemQueue }"
+                            borderColor="#555555"
+                            bottom="0"
+                            left="0"
+                            right="0"
+                            top="22"
+                            itemRenderer="com.gorillalogic.flexmonkey.views.renderers.TestRunnerItemRenderer"
+                            useVirtualLayout="true"
+                            skinClass="com.gorillalogic.flexmonkey.views.skins.TestRunnerListSkin"
+                            rendererAdd="itemListRendererAddHandler(event)">
+                        <s:layout>
+                            <s:VerticalLayout gap="0"/>
+                        </s:layout>
+                    </s:List>
+                </s:Group>
+            </s:VGroup>
+
+            <!-- column two -->
+            <s:VGroup width="{ detailPanelWidth }"
+                      height="100%">
+
+                <!-- progress bar -->
+                <s:Group id="progressGroup"
+                         width="100%"
+                         height="25">
+
+                    <s:Rect width="{ progessPercentage * progressGroup.width }"
+                            bottom="0"
+                            left="0"
+                            top="0">
+                        <s:fill>
+                            <s:SolidColor color="#778899"/>
+                        </s:fill>
+                    </s:Rect>
+
+                    <s:Rect bottom="0"
+                            left="0"
+                            right="0"
+                            top="0">
+                        <s:stroke>
+                            <s:SolidColorStroke color="#000000"
+                                                weight="1"/>
+                        </s:stroke>
+                    </s:Rect>
+
+                    <s:Label text="{ model.currentItemCount } of { model.total }"
+                             bottom="0"
+                             left="0"
+                             right="0"
+                             textAlign="center"
+                             top="0"
+                             verticalAlign="middle"/>
+                </s:Group>
+
+                <!-- item details -->
+                <runner:TestRunnerDetail id="detailPanel"
+                                         width="100%"
+                                         height="100%"
+                                         headAlpha="{ selectedItemAlpha }"
+                                         monkeyRunnable="{ selectedResultItem }"/>
+
+            </s:VGroup>
+
+        </s:HGroup>
+
+        <!-- item console -->
+        <runner:TestRunnerDetailConsole height="158"
+                                        bottom="0"
+                                        left="0"
+                                        right="0"
+                                        headAlpha="{ selectedItemAlpha }"
+                                        monkeyRunnable="{ selectedResultItem }"/>
+
+    </s:Group>
+
+
+
+</containers:FMPopup>

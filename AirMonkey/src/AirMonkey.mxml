@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU General Public License, v2.
+-->
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+                       xmlns:mx="library://ns.adobe.com/flex/mx"
+                       xmlns:s="library://ns.adobe.com/flex/spark"
+                       xmlns:controllers="com.gorillalogic.flexmonkey.controllers.*"
+                       xmlns:views="com.gorillalogic.flexmonkey.views.*"
+                       xmlns:monkeylink="com.gorillalogic.monkeylink.*"
+                       width="0"
+                       height="0"
+                       visible="false"
+                       applicationComplete="applicationCompleteHandler()"
+                       initialize="initializeHandler()"
+                       closing="closingHandler(event)">
+
+    <fx:Declarations>
+        <fx:Array id="controllers">
+            <controllers:StartupController/>
+
+            <controllers:MonkeyNodeController/>
+            <controllers:MonkeyRunnableController/>
+            <controllers:RecordController/>
+            <controllers:ApplicationController/>
+            <monkeylink:MonkeyLinkConsoleConnectionController/>
+            <controllers:TestRunnerController/>
+            <controllers:StatusCheckController/>
+
+            <controllers:ProjectFilesController/>
+            <controllers:SnapshotController/>
+            <controllers:LogFileController/>
+            <controllers:AutomationTreeDisplayController/>
+            <controllers:EnvironmentDisplayController/>
+            <controllers:CodeGenController/>
+        </fx:Array>
+    </fx:Declarations>
+
+    <fx:Script>
+        <![CDATA[
+            import air.update.ApplicationUpdaterUI;
+            import air.update.events.UpdateEvent;
+
+            import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+            import com.gorillalogic.flexmonkey.events.FMAlertEvent;
+            import com.gorillalogic.flexmonkey.utils.FMLogger;
+            import com.gorillalogic.flexmonkey.utils.MainViewWindowManager;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.core.IVisualElement;
+            import mx.events.StyleEvent;
+            import mx.managers.ToolTipManager;
+            import mx.utils.ObjectUtil;
+
+            private var updater:ApplicationUpdaterUI = new ApplicationUpdaterUI();
+
+            private function initializeHandler():void {
+                var myevent:IEventDispatcher = styleManager.loadStyleDeclarations("assets/airmonkey.swf", true);
+                myevent.addEventListener(StyleEvent.COMPLETE, createComponents);
+            }
+
+            private function createComponents(event:StyleEvent):void {
+                FMHub.instance.init(controllers);
+
+                //load main window after styles have been loaded
+                MainViewWindowManager.instance.load();
+            }
+
+            private function updaterInitialized(event:UpdateEvent):void {
+                var isFirstRun:Boolean = event.target.isFirstRun;
+                var previousVersion:String = event.target.previousVersion;
+                var currentVersion:String = event.target.currentVersion;
+            }
+
+            private function applicationCompleteHandler():void {
+                ToolTipManager.showDelay = 250;
+                loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onUncaughtError);
+                FMLogger.instance.info("FlexMonkey console started");
+            }
+
+            private function closingHandler(event:Event):void {
+                event.preventDefault();
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.MONKEY_EXIT));
+            }
+
+            private function onUncaughtError(e:UncaughtErrorEvent):void {
+                var message:String;
+
+                if (e.error is Error) {
+                    var error:Error = e.error as Error;
+                    message = "errorID: " + error.errorID +
+                        "\n error.name: " + error.name +
+                        "\n error.message: " + error.message;
+                    FMLogger.instance.error(message);
+                    FMLogger.instance.error(ObjectUtil.toString(error));
+                } else {
+                    var errorEvent:ErrorEvent = e.error as ErrorEvent;
+                    message = ObjectUtil.toString(errorEvent);
+                    FMLogger.instance.error(message);
+                }
+
+                FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "System Error: " + message));
+            }
+        ]]>
+    </fx:Script>
+
+</s:WindowedApplication>

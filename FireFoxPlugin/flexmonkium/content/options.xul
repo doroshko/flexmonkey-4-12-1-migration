@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+ 
+<!-- !DOCTYPE prefwindow SYSTEM "chrome://flexmonkium/locale/options.dtd" -->
+
+<prefwindow id="flexmonkium-prefs"
+      title="FlexMonkiium Settings" 
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <!-- Pref Pane --> 
+  <prefpane id="flexmonkium-panel" label="FlexMonkium Settings"> 
+ 
+    <preferences>
+      <preference id="pref_console" name="extensions.selenium-ide.flexmonkium.consolePath" type="string"/>
+    </preferences>
+ 
+    <tabbox>  
+      <tabs>
+        <tab label="General"/>
+      </tabs>
+      <tabpanels flex="1" >
+        <tabpanel>
+          <vbox flex="1">
+            <vbox align="left">
+              <label control="name" value="Full path to FlexMonkium console:"/>
+              <hbox><textbox preference="pref_console" id="console" size="80"/><button label="Browse..." oncommand="document.getElementById('console').value = FlexMonkium.chooseFile(); document.getElementById('pref_console').value = document.getElementById('console').value"/></hbox>
+            </vbox>
+            <spacer height="100" />
+          </vbox>
+        </tabpanel>
+      </tabpanels>
+    </tabbox>
+  </prefpane>
+  <script src="overlay.js"/> 
+
+  <spacer height="100" />
+</prefwindow>

@@ -1,0 +1,51 @@
+Multi-SWF/Multi Application
+
+This sample uses a SWFLoader to load a separately-built SWF file and automates interactions with the newly-loaded SWF as well as the original SWF.
+
+The separately built SWF is located at html-templates/QuoteOMatic.swf. It is NOT built with FlexMonkey linked in. The regular build process will move this SWF to the build directory, which is where the original TomSwftie1.swf file loads it from. The source for this application is below.
+
+The tests run successfully from the FlexMonkey Console and from ant (on Mac OSX using Firefox). Modify build.properties if you want to try it.
+
+copyright 2011 Gorilla Logic, Inc.
+
+
+>> BEGIN source code for QuoteOMatic.mxml
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="350" minHeight="400">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+<![CDATA[
+	[Bindable]
+
+	public var currentQuote:String;
+	public var quoteNdx:int=0;
+
+	public function nextQuote_clickHandler(event:Event):void {
+		quoteNdx++;
+		if (quoteNdx==quotes.length) {
+			quoteNdx=0;
+		}
+		currentQuote=quotes[quoteNdx];
+	}
+	
+	private var quotes:Array = new Array(
+		"The evil that men do lives after them; the good is oft interred with their bones.", 
+		"As he was valiant, I honour him. But as he was ambitious, I slew him.", 
+		"Asses are made to bear, and so are you.", 
+		"Now is the winter of our discontent\nMade glorious summer by this son of York;\nAnd all the clouds that low'r'd upon our house\nIn the deep bosom of the ocean buried",
+		"Double, double toil and trouble\nFire burn, and cauldron bubble."
+	);
+			
+]]>
+	</fx:Script>
+	<s:VGroup width="100%" height="100%" x="0" y="10">
+		<s:TextArea width="400" height="300" text="{this.currentQuote}"/>
+		<s:Button label="Next Quote" click="nextQuote_clickHandler(event)"/>
+	</s:VGroup>
+</mx:Application>
+>> END source code for QuoteOMatic.mxml
+

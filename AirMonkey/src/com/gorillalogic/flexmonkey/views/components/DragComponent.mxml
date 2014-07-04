@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SkinnableComponent xmlns:mx="library://ns.adobe.com/flex/mx"
+                      xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+                      width="20"
+                      dragComplete="dragCompleteHandler(event)"
+                      mouseDown="clickHandler(event)"
+                      mouseUp="mouseUpHandler(event)"
+                      rollOut="rollOutHandler(event)"
+                      rollOver="rollOverHandler(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.DragBarSkin">
+
+    <fx:Metadata>
+		[SkinState("up")]
+		[SkinState("overDown")]
+	</fx:Metadata>
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.core.MonkeyTest;
+            import com.gorillalogic.flexmonkey.core.MonkeyTestCase;
+            import com.gorillalogic.flexmonkey.core.MonkeyTestSuite;
+            import com.gorillalogic.flexmonkey.events.InteractionEvent;
+            import com.gorillalogic.flexmonkey.monkeyCommands.CallFunctionMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.PauseMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.SetPropertyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.StoreValueMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.UIEventMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyGridMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyPropertyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.utils.DragRequest;
+            import com.gorillalogic.flexmonkey.views.skins.DragBarSkin;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.controls.Image;
+            import mx.core.DragSource;
+            import mx.events.DragEvent;
+            import mx.managers.DragManager;
+
+            private var _skinState:String;
+
+            [SkinPart(required="false")]
+            public var iconImage:Image;
+
+            [Bindable] public var monkeyRunnable:MonkeyRunnable;
+            [Bindable] public var dragSource:DragSource;
+
+            protected function rollOverHandler(event:MouseEvent):void {
+                this.skinState = "overDown";
+            }
+
+            protected function clickHandler(event:MouseEvent):void {
+                this.skinState = "overDown";
+
+                var i:Image;
+
+                if (dragSource != null &&
+                    dragSource.dataForFormat(DragRequest.TYPE) as String == DragRequest.COPY_MONKEY_RUNNABLE) {
+                    i = copyImage;
+                } else if (monkeyRunnable != null) {
+                    if (monkeyRunnable is MonkeyTestSuite) {
+                        i = suiteImage;
+                    } else if (monkeyRunnable is MonkeyTestCase) {
+                        i = caseImage;
+                    } else if (monkeyRunnable is MonkeyTest) {
+                        i = testImage;
+                    } else if (monkeyRunnable is VerifyMonkeyCommand) {
+                        i = verifyImage;
+                    } else if (monkeyRunnable is VerifyGridMonkeyCommand) {
+                        i = verifyGridImage;
+                    } else if (monkeyRunnable is VerifyPropertyMonkeyCommand) {
+                        i = verifyPropImage;
+                    } else if (monkeyRunnable is CallFunctionMonkeyCommand) {
+                        i = funcImage;
+                    } else if (monkeyRunnable is SetPropertyMonkeyCommand) {
+                        i = gearImage;
+                    } else if (monkeyRunnable is StoreValueMonkeyCommand) {
+                        i = keyImage;
+                    } else if (monkeyRunnable is PauseMonkeyCommand) {
+                        i = pauseImage;
+                    } else if (monkeyRunnable is UIEventMonkeyCommand) {
+                        var cmd:String = (monkeyRunnable as UIEventMonkeyCommand).command;
+
+                        if (cmd == "Type" || cmd == "Input") {
+                            i = keyboardImage;
+                        } else if (cmd.indexOf("Click") != -1) {
+                            i = clickImage;
+                        } else {
+                            i = lightningImage;
+                        }
+                    } else {
+                        i = lightningImage;
+                    }
+
+                } else {
+                    i = iconImage;
+
+                    if (dragSource == null) {
+                        dragSource = new DragSource();
+                    }
+                }
+
+                if (i == null) {
+                    DragManager.doDrag(this, dragSource, event, this);
+                } else {
+                    DragManager.doDrag(this, dragSource, event, i);
+                }
+                FMHub.instance.dispatchEvent(new InteractionEvent(InteractionEvent.DRAG_STARTED, null, dragSource));
+            }
+
+            protected function rollOutHandler(event:MouseEvent):void {
+                this.skinState = "up";
+            }
+
+            protected function mouseUpHandler(event:MouseEvent):void {
+                this.skinState = "up";
+            }
+
+            public function set skinState(value:String):void {
+                _skinState = value;
+                invalidateSkinState();
+            }
+
+            override protected function getCurrentSkinState():String {
+                return this._skinState;
+            }
+
+            protected function dragCompleteHandler(event:DragEvent):void {
+                FMHub.instance.dispatchEvent(new InteractionEvent(InteractionEvent.DRAG_DONE));
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <mx:Image id="suiteImage"
+                  source="{ Assets.suiteImageClass }"/>
+        <mx:Image id="caseImage"
+                  source="{ Assets.caseImageClass }"/>
+        <mx:Image id="testImage"
+                  source="{ Assets.testImageClass }"/>
+        <mx:Image id="verifyImage"
+                  source="{ Assets.verifyImageClass }"/>
+        <mx:Image id="verifyGridImage"
+                  source="{ Assets.verifyGridImageClass }"/>
+        <mx:Image id="verifyPropImage"
+                  source="{ Assets.verifyPropImageClass }"/>
+        <mx:Image id="pauseImage"
+                  source="{ Assets.pauseImageClass }"/>
+        <mx:Image id="lightningImage"
+                  source="{ Assets.lightningImageClass }"/>
+        <mx:Image id="clickImage"
+                  source="{ Assets.mouseImageClass }"/>
+        <mx:Image id="keyboardImage"
+                  source="{ Assets.keyboardImageClass }"/>
+        <mx:Image id="copyImage"
+                  source="{ Assets.copyImageClass }"/>
+        <mx:Image id="funcImage"
+                  source="{ Assets.funcImageClass }"/>
+        <mx:Image id="gearImage"
+                  source="{ Assets.gearImageClass }"/>
+        <mx:Image id="keyImage"
+                  source="{ Assets.keyImageClass }"/>
+
+    </fx:Declarations>
+
+</s:SkinnableComponent>

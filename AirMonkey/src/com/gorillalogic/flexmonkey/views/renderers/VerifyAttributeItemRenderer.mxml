@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:mx="library://ns.adobe.com/flex/mx"
+                xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+                width="100%"
+                height="64"
+                creationComplete="create(event)"
+                autoDrawBackground="false">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.PayloadEvent;
+            import com.gorillalogic.flexmonkey.monkeyCommands.StoreValueMonkeyCommand;
+            import com.gorillalogic.flexmonkey.vo.AttributeVO;
+            import com.gorillalogic.utils.StoredValueLookup;
+
+            import mx.events.FlexEvent;
+
+            import org.as3commons.lang.StringUtils;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable] private var attr:AttributeVO;
+            [Bindable] private var bgColor:uint;
+            [Bindable] private var storedValueLookup:StoredValueLookup;
+            [Bindable] private var enteredValue:String;
+
+            override public function set data(value:Object):void {
+                if (value != null) {
+                    super.data = value;
+                    attr = value as AttributeVO;
+                    bgColor = (this.itemIndex % 2 == 0) ? 0xffffff : 0xeeeeee;
+
+                    //update expected value
+                    if (StringUtils.startsWith(attr.expectedValue, StoredValueLookup.KEY_PREFIX)) {
+                        storedKeyValueList.selectedIndex = StoredValueLookup.instance.getCommandPos(attr.expectedValue);
+                    } else {
+                        enteredValue = attr.expectedValue;
+                    }
+                }
+            }
+
+            protected function removeButton_clickHandler(event:MouseEvent):void {
+                dispatchEvent(new PayloadEvent("removePropertyVerficationItem", data, true));
+            }
+
+            protected function create(event:FlexEvent):void {
+                storedValueLookup = StoredValueLookup.instance;
+            }
+
+            protected function verifyKeyChanged(event:IndexChangeEvent):void {
+                if (event.currentTarget.selectedIndex >= 0) {
+                    attr.expectedValue = StoredValueLookup.KEY_PREFIX + (event.currentTarget.selectedItem as StoreValueMonkeyCommand).keyName;
+                }
+            }
+
+            protected function verifyPropertyValueInputChangeHandler(event:Event):void {
+                if (enteredValue != null && enteredValue.length > 0) {
+                    attr.expectedValue = enteredValue;
+                    storedKeyValueList.selectedIndex = -1;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Rect bottom="0"
+            left="0"
+            right="0"
+            top="0"
+            radiusX="3">
+        <s:fill>
+            <s:SolidColor color="{ bgColor }"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke color="#999999"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Rect width="20"
+            height="20"
+            right="0"
+            top="0"
+            radiusX="3">
+        <s:fill>
+            <s:SolidColor color="#ffffff"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke color="#999999"/>
+        </s:stroke>
+    </s:Rect>
+
+    <s:Label text="Expected Value"
+             fontWeight="bold"
+             left="155"
+             right="0"
+             textAlign="center"
+             top="10"/>
+
+    <s:Label text="- OR -"
+             bottom="8"
+             fontSize="9"
+             left="160"
+             right="5"
+             textAlign="center"/>
+
+    <s:Label width="{ (this.width - 200) / 2 }"
+             text="Stored Key Value:"
+             bottom="28"
+             fontSize="10"
+             fontStyle="italic"
+             right="5"/>
+
+    <s:Label text="Enter Value:"
+             bottom="28"
+             fontSize="10"
+             fontStyle="italic"
+             left="160"/>
+
+    <s:Label width="150"
+             text="Verification Property"
+             fontWeight="bold"
+             left="5"
+             textAlign="center"
+             top="10"/>
+
+    <s:Label width="130"
+             text="{ attr.name }"
+             bottom="10"
+             fontStyle="italic"
+             left="10"
+             textAlign="center"
+             top="30"
+             maxDisplayedLines="-1"/>
+
+    <s:Line height="100%"
+            left="155">
+        <s:stroke>
+            <s:SolidColorStroke color="#999999"/>
+        </s:stroke>
+    </s:Line>
+
+    <s:TextInput id="expectedValueTextInput"
+                 width="{ (this.width - 200) / 2 }"
+                 text="@{ enteredValue }"
+                 bottom="4"
+                 fontSize="11"
+                 left="160"
+                 change="verifyPropertyValueInputChangeHandler(event)"/>
+
+    <s:DropDownList id="storedKeyValueList"
+                    width="{ (this.width - 200) / 2 }"
+                    dataProvider="{ storedValueLookup.storeValueCmds }"
+                    enabled="{ expectedValueTextInput.text == null || expectedValueTextInput.text.length == 0 &amp;&amp; storedValueLookup.storeValueCmds.length > 0 }"
+                    labelField="keyName"
+                    bottom="4"
+                    right="5"
+                    change="verifyKeyChanged(event)"
+                    prompt="Select 'Key Value' or 'Enter Value'"/>
+
+    <s:Button id="removeButton"
+              toolTip="Delete Verifcation of Property"
+              right="0"
+              top="0"
+              click="removeButton_clickHandler(event)"
+              skinClass="com.gorillalogic.flexmonkey.views.skins.SimpleXButtonSkin"/>
+
+
+</s:ItemRenderer>

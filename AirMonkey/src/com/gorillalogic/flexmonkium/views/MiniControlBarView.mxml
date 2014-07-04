@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU Affero General Public License, v3.
+-->
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+         xmlns:comps="com.gorillalogic.flexmonkey.application.UI.viewComponents.*"
+         initialize="initializeHandler()"
+         horizontalAlign="center"
+         verticalAlign="middle"
+         width="100%"
+         height="100%"
+         xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*"
+         creationComplete="creationCompleted()">
+    <mx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.events.FMAlertEvent;
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.flexmonkey.monkeyCommands.*;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.flexmonkey.vo.TargetVO;
+            import com.gorillalogic.framework.FMHub;
+            import com.gorillalogic.monkeylink.MonkeyLinkConsoleConnectionController;
+
+            import mx.events.ToolTipEvent;
+
+            [Bindable] public static var defaultPNG:Class;
+            private var _commMode:String;
+            [Bindable] public var browserConnectionIndicatorEnabled:Boolean = false;
+            public var takingSnapshot:Boolean;
+
+
+            [Bindable] private var model:ApplicationModel = ApplicationModel.instance;
+
+
+            private function initializeHandler():void {
+                browserConnectionIndicatorEnabled = true;
+
+            }
+
+            private function creationCompleted():void {
+                FMHub.instance.listen(MonkeyRunnableEvent.EDIT_MONKEY_RUNNABLE, newVerifyProperty, this);
+                FMHub.instance.listen(MonkeyRunnableEvent.CANCEL_COMPONENT_SELECTION, cancelComponentSelection, this);
+
+
+            }
+
+            public function toolTipShowHandler(event:ToolTipEvent, offsetX:int = 0):void {
+                var point:Point = event.currentTarget.localToGlobal(new Point(0, 0));
+                event.toolTip.x = point.x + offsetX;
+                event.toolTip.y = point.y + event.currentTarget.height;
+            }
+            private var propWin:PropertySelectionWindow;
+
+            private function cancelComponentSelection(event:Event):void {
+                MonkeyLinkConsoleConnectionController.instance.cancelComponentSelection();
+                propWin.close();
+            }
+
+            public function addVerifyButtonHandler(event:MouseEvent):void {
+                if (propWin) {
+                    propWin.close();
+                }
+                propWin = new PropertySelectionWindow();
+
+                var verify:VerifyMonkeyCommand = new VerifyMonkeyCommand();
+
+                //verifyForm = propWin.verifyForm;
+                ProjectTestModel.instance.selectedItem = verify;
+
+//				verifyForm.openPopup("spyProperties");
+                //verifyForm.openPopup("newMonkeyRunnable");
+                propWin.open();
+                propWin.nativeWindow.x = this.stage.nativeWindow.x;
+                propWin.nativeWindow.y = this.stage.nativeWindow.y;
+                ;
+                propWin.verifyForm.verifyMonkeyCommand = verify;
+                propWin.verifyForm.isNewVerify = true;
+                MonkeyLinkConsoleConnectionController.instance.selectComponent(addVerifyMonkeyCommandCallBack);
+//FMHub.instance.dispatchEvent(new UserEvent(UserEvent.SELECT_APPLICATION_COMPONENT, verify));
+
+            }
+
+            private function addVerifyMonkeyCommandCallBack(uiCommand:UIEventMonkeyCommand):void {
+//				var v:VerifyMonkeyCommand = model.selectedItem as VerifyMonkeyCommand;
+                var v:VerifyMonkeyCommand = new VerifyMonkeyCommand;
+                v.value = uiCommand.value;
+                v.prop = uiCommand.prop;
+                v.containerValue = uiCommand.containerValue;
+                v.containerProp = uiCommand.containerProp;
+                //load target data
+                MonkeyLinkConsoleConnectionController.instance.requestVerifyTarget(v, processTarget);
+
+                //change display
+//				FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.EDIT_VERIFY_SPY_WINDOW, v));
+
+                propWin.verifyForm.isNewVerify = true;
+                propWin.verifyForm.verifyMonkeyCommand = v;
+                //verifyForm.openPopup("spyProperties");
+                propWin.verifyForm.currentState = "spyPropertiesMonkium";
+            }
+
+            private function processTarget(targetVO:TargetVO,
+                                           commandProvided:MonkeyRunnable,
+                                           errorMessage:String = null):void {
+
+                var v:VerifyMonkeyCommand = commandProvided as VerifyMonkeyCommand;
+                trace(v);
+
+                if (errorMessage != null) {
+                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.ERROR, v.description + ": " + errorMessage));
+                } else if (targetVO.snapshotVO == null) {
+                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.ERROR, v.description + ": Could not find target " + v.value));
+                } else {
+                    v.targetVO = targetVO;
+                }
+            }
+
+            private function newVerifyProperty(ev:MonkeyRunnableEvent):void {
+                propWin.close();
+                var vmc:VerifyMonkeyCommand = ev.monkeyRunnable as VerifyMonkeyCommand;
+                vmc.parent = null;
+                MonkeyLinkConsoleConnectionController.instance.sendObj("_agent", "newVerifyProperty", vmc);
+            }
+
+            private function gorillaButtonHandler(event:MouseEvent):void {
+                try {
+                    navigateToURL(new URLRequest("http://www.gorillalogic.com/flexmonkey"));
+                } catch (e:Error) {
+                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "Could not launch http://www.gorillalogic.com/flexmonkey in Browser"));
+                }
+            }
+        ]]>
+    </mx:Script>
+    <!-- Enable logic -->
+
+    <mx:Binding source="browserConnectionIndicatorEnabled"
+                destination="browserConnectionIndicator.enabled"/>
+
+
+    <mx:Button id="addVerifyButton"
+               toolTip="Add Verify"
+               icon="{Assets.verifyImageClass}"
+               width="32"
+               height="32"
+               click="addVerifyButtonHandler(event)"/>
+
+    <mx:VRule height="90%"/>
+    <mx:Image id="browserConnectionIndicator"
+              source="{model.isConnected ? Assets.connectedImageClass : Assets.disconnectedImageClass}"
+              toolTip="{model.isConnected ? 'Connected' : 'Disconnected'}"
+              alpha="{model.isConnected ? 1 : 1}"
+              width="32"
+              height="32"/>
+    <mx:VRule height="90%"/>
+    <mx:Button id="gorillaButton"
+               toolTip="Need Help? Go Gorilla!"
+               icon="{Assets.gorillaHeadImageClass}"
+               width="32"
+               height="32"
+               click="gorillaButtonHandler(event)"/>
+
+
+</mx:HBox>

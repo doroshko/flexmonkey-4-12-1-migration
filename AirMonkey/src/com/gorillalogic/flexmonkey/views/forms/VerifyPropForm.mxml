@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    creationComplete="create()"
+                    title="Edit Verify Expression"
+                    title.newMonkeyRunnable="Select Component for Verification"
+                    titleImageSource="{ Assets.verifyPropImageClass }"
+                    monkeyRunnable="{verifyPropertyMonkeyCommand}">
+
+    <containers:states>
+        <s:State name="base"/>
+        <s:State name="newMonkeyRunnable"/>
+    </containers:states>
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.monkeyCommands.StoreValueMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyPropertyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.utils.FMMessageConstants;
+            import com.gorillalogic.framework.FMHub;
+            import com.gorillalogic.utils.StoredValueLookup;
+
+            import mx.collections.ArrayCollection;
+            import mx.events.PropertyChangeEvent;
+
+            import org.as3commons.lang.StringUtils;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable] private var typeSelectedIndex:int = 0;
+            [Bindable] private var typeOptions:ArrayCollection;
+            [Bindable] private var storedValueLookup:StoredValueLookup;
+            [Bindable] private var enteredValue:String;
+            private var _verifyCommand:VerifyPropertyMonkeyCommand;
+
+            [Bindable] public function get verifyPropertyMonkeyCommand():VerifyPropertyMonkeyCommand {
+                return _verifyCommand;
+            }
+
+            public function set verifyPropertyMonkeyCommand(value:VerifyPropertyMonkeyCommand):void {
+                _verifyCommand = value;
+
+                if (_verifyCommand.propertyType == VerifyPropertyMonkeyCommand.NOT_EQUALS) {
+                    typeSelectedIndex = 1;
+                } else if (_verifyCommand.propertyType == VerifyPropertyMonkeyCommand.LESS_THAN_TYPE) {
+                    typeSelectedIndex = 2;
+                } else if (_verifyCommand.propertyType == VerifyPropertyMonkeyCommand.GREATER_THAN_TYPE) {
+                    typeSelectedIndex = 3;
+                } else if (_verifyCommand.propertyType == VerifyPropertyMonkeyCommand.CONTAINS_TYPE) {
+                    typeSelectedIndex = 4;
+                } else {
+                    typeSelectedIndex = 0;
+                }
+
+                //update expected value
+                if (StringUtils.startsWith(_verifyCommand.expectedValue, StoredValueLookup.KEY_PREFIX)) {
+                    storedKeyValueList.selectedIndex = StoredValueLookup.instance.getCommandPos(_verifyCommand.expectedValue);
+                } else {
+                    enteredValue = _verifyCommand.expectedValue;
+                }
+
+                // verify property changes
+                if (_verifyCommand != null) {
+                    _verifyCommand.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, verifyUpdated);
+                }
+            }
+
+            protected function verifyUpdated(event:Event):void {
+                if (_verifyCommand.parent != null) {
+                    ApplicationModel.instance.isMonkeyTestFileDirty = true;
+                }
+            }
+
+            protected function create():void {
+                storedValueLookup = StoredValueLookup.instance;
+
+                typeOptions = new ArrayCollection();
+                typeOptions.addItem({ label: "Equal", value: VerifyPropertyMonkeyCommand.DEFAULT_EQUALS_TYPE });
+                typeOptions.addItem({ label: "Not Equal", value: VerifyPropertyMonkeyCommand.NOT_EQUALS });
+                typeOptions.addItem({ label: "Less Than", value: VerifyPropertyMonkeyCommand.LESS_THAN_TYPE });
+                typeOptions.addItem({ label: "Greater Than", value: VerifyPropertyMonkeyCommand.GREATER_THAN_TYPE });
+                typeOptions.addItem({ label: "Contains", value: VerifyPropertyMonkeyCommand.CONTAINS_TYPE });
+            }
+
+            protected function cancelClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.CANCEL_COMPONENT_SELECTION));
+                closePopup();
+            }
+
+            protected function verifyPropertyTypeInput_changeHandler(event:IndexChangeEvent):void {
+                _verifyCommand.propertyType = typeOptions.getItemAt(typeSelectedIndex).value;
+            }
+
+            protected function verifyKeyChanged(event:IndexChangeEvent):void {
+                if (event.currentTarget.selectedIndex >= 0) {
+                    verifyPropertyMonkeyCommand.expectedValue = StoredValueLookup.KEY_PREFIX + (event.currentTarget.selectedItem as StoreValueMonkeyCommand).keyName;
+                }
+            }
+
+            protected function verifyPropertyValueInputChangeHandler(event:Event):void {
+                if (enteredValue != null && enteredValue.length > 0) {
+                    verifyPropertyMonkeyCommand.expectedValue = enteredValue;
+                    storedKeyValueList.selectedIndex = -1;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:Group width="435"
+             maxHeight="575"
+             maxWidth="650"
+             bottom="0"
+             left="0"
+             right="0"
+             top="0"
+             includeIn="base">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"/>
+        </s:layout>
+
+        <!-- header navigation -->
+        <s:HGroup id="buttonBox"
+                  width="100%"
+                  horizontalAlign="right">
+        </s:HGroup>
+
+        <mx:Form id="verifyForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+
+            <mx:FormItem width="100%"
+                         label="Description"
+                         labelWidth="165">
+                <mx:TextInput id="verifyDescriptionFormItem"
+                              width="100%"
+                              text="@{ verifyPropertyMonkeyCommand.description }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Target Value"
+                         labelWidth="165">
+                <mx:TextInput id="verifyValueFormItem"
+                              width="100%"
+                              text="@{ verifyPropertyMonkeyCommand.value }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Target Property"
+                         labelWidth="165">
+                <mx:TextInput id="verifyPropFormItem"
+                              width="100%"
+                              text="@{ verifyPropertyMonkeyCommand.prop }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Container Value"
+                         labelWidth="165">
+                <mx:TextInput id="verifyContainerValueFormItem"
+                              width="100%"
+                              text="@{ verifyPropertyMonkeyCommand.containerValue }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Container Property"
+                         labelWidth="165">
+                <mx:TextInput id="verifyContainerPropFormItem"
+                              width="100%"
+                              text="@{ verifyPropertyMonkeyCommand.containerProp }"/>
+            </mx:FormItem>
+
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form id="verifyForm2"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+
+            <mx:FormItem width="100%"
+                         label="Verify Property String"
+                         labelWidth="165">
+                <mx:TextInput id="verifyPropertyStringInput"
+                              width="100%"
+                              text="@{ verifyPropertyMonkeyCommand.propertyString }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Type"
+                         labelWidth="165">
+                <s:DropDownList id="verifyPropertyTypeInput"
+                                width="100%"
+                                dataProvider="{ typeOptions }"
+                                labelField="label"
+                                selectedIndex="@{ typeSelectedIndex }"
+                                change="verifyPropertyTypeInput_changeHandler(event)"/>
+            </mx:FormItem>
+
+
+            <mx:FormItem width="100%"
+                         label="Expected: Enter Value"
+                         labelWidth="165">
+                <mx:TextInput id="verifyPropertyValueInput"
+                              width="100%"
+                              text="@{ enteredValue }"
+                              change="verifyPropertyValueInputChangeHandler(event)"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="- OR -"
+                         labelWidth="165"/>
+
+            <mx:FormItem width="100%"
+                         label="Expected: Stored Key Value"
+                         labelWidth="165">
+                <s:DropDownList id="storedKeyValueList"
+                                width="100%"
+                                dataProvider="{ storedValueLookup.storeValueCmds }"
+                                enabled="{ verifyPropertyValueInput.text == null || verifyPropertyValueInput.text.length == 0 &amp;&amp; storedValueLookup.storeValueCmds.length > 0 }"
+                                labelField="keyName"
+                                change="verifyKeyChanged(event)"
+                                prompt="Select Expected 'Key Value' or 'Enter Value'"/>
+            </mx:FormItem>
+
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form id="retryForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+            <mx:FormItem width="100%"
+                         label="Retry Delay"
+                         labelWidth="165">
+                <mx:TextInput id="verifyDelayFormItem"
+                              width="100%"
+                              text="@{ verifyPropertyMonkeyCommand.delay }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Retry Attempts"
+                         labelWidth="165">
+                <mx:TextInput id="verifyAttemptsFormItem"
+                              width="100%"
+                              text="@{ verifyPropertyMonkeyCommand.attempts }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Total Retry Timeout"
+                         labelWidth="165">
+                <mx:TextInput id="verifyTimeoutFormItem"
+                              width="100%"
+                              text="{ verifyPropertyMonkeyCommand.timeOut }"
+                              enabled="false"
+                              editable="false"/>
+            </mx:FormItem>
+        </mx:Form>
+    </s:Group>
+
+    <s:Group maxHeight="650"
+             maxWidth="800"
+             bottom="20"
+             left="20"
+             right="20"
+             top="20"
+             includeIn="newMonkeyRunnable">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label width="400"
+                 text="{ FMMessageConstants.VERIFY_PROP_COMPONENT_SELECTION }"
+                 fontSize="18"
+                 fontWeight="bold"
+                 textAlign="center"
+                 maxDisplayedLines="-1"/>
+        <s:Button label="Cancel"
+                  click="cancelClickHandler(event)"/>
+    </s:Group>
+
+
+</containers:FMPopup>

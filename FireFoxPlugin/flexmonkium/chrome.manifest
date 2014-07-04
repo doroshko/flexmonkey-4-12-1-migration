@@ -1,0 +1,16 @@
+content flexmonkium  jar:chrome/flexmonkium.jar!/content/
+ 
+overlay chrome://selenium-ide/content/selenium-ide-common.xul jar:chrome/flexmonkium.jar!/content/optionsOverlay.xul 
+
+# toolbar button 
+overlay chrome://selenium-ide/content/selenium-ide.xul jar:chrome/flexmonkium.jar!/content/toolbarOverlay.xul
+
+# Commands extensions
+overlay chrome://selenium-ide/content/selenium-ide-overlay.xul jar:chrome/flexmonkium.jar!/content/extension-loader.xul
+
+# Formatter
+overlay chrome://selenium-ide/content/selenium-ide-overlay.xul jar:chrome/flexmonkium.jar!/content/format-loader.xul
+
+# Sidebar
+overlay chrome://selenium-ide/content/selenium-ide-sidebar.xul jar:chrome/flexmonkium.jar!/content/sidebarToolbarOverlay.xul
+

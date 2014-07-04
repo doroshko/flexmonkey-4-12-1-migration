@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU Affero General Public License, v3.
+-->
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:views="com.gorillalogic.flexmonkium.views.*"
+          title="{windowTitle}"
+          windowComplete="windowCompleteHandler()"
+          closing="exitingHandler(event)"
+          backgroundColor="0xE0E0E0"
+          alwaysInFront="true"
+          width="200"
+          height="135"
+          resizable="false" xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+            import com.gorillalogic.framework.FMHub;
+
+
+            [Bindable] private var windowTitle:String = "FlexMonkium";
+
+
+            private function windowCompleteHandler():void {
+                NativeApplication.nativeApplication.addEventListener(Event.EXITING, exitingHandler, false, 0, true);
+            }
+
+            private function exitingHandler(event:Event):void {
+                event.preventDefault();
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.MONKEY_EXIT));
+            }
+        ]]>
+    </fx:Script>
+
+
+    <views:MiniControlBarView id="controlBarView"/>
+	<forms:VerifyForm id="verifyForm"
+					  visible="false"/>	
+</s:Window>

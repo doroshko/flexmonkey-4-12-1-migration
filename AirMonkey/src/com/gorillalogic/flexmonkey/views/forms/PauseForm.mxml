@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="Edit Pause"
+                    titleImageSource="{Assets.pauseImageClass}"
+                    monkeyRunnable="{this.pause}">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.monkeyCommands.PauseMonkeyCommand;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.flexmonkey.views.skins.FMPopupSkin;
+
+            import spark.events.TextOperationEvent;
+
+            private var _pause:PauseMonkeyCommand;
+
+            [Bindable] public function get pause():PauseMonkeyCommand {
+                return _pause;
+            }
+
+            public function set pause(value:PauseMonkeyCommand):void {
+                _pause = value;
+            }
+
+            protected function pauseDurationFormItemChangeHandler(event:Event):void {
+                _pause.duration = uint(pauseDurationFormItem.text);
+                ApplicationModel.instance.isMonkeyTestFileDirty = true;
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:Label text="Duration (milliseconds)"
+             fontWeight="bold"
+             left="5"
+             top="12"/>
+
+    <s:TextInput id="pauseDurationFormItem"
+                 width="125"
+                 text="{ pause.duration }"
+                 left="150"
+                 right="10"
+                 top="5"
+                 change="pauseDurationFormItemChangeHandler(event)"
+                 restrict="0-9"/>
+
+</containers:FMPopup>

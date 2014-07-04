@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="{alertTitle}">
+
+    <fx:Script>
+        <![CDATA[
+            [Bindable] public var alertTitle:String = "FlexMonkey Alert";
+            [Bindable] public var alertMessage:String;
+
+            override public function closeClickHander(evetn:MouseEvent):void {
+                currentState = "base";
+                alertTitle = "Alert";
+                closePopup();
+            }
+
+            override public function set currentState(value:String):void {
+                super.currentState = value;
+
+                if (super.currentState == "help") {
+                    titleColor = 0x000000;
+                } else if (super.currentState == "error") {
+                    titleColor = 0x000000;
+                } else {
+                    titleColor = 0x333333;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <containers:states>
+        <s:State name="base"/>
+        <s:State name="help"/>
+        <s:State name="error"/>
+    </containers:states>
+
+    <s:Group left="20"
+             right="20"
+             bottom="10"
+             top="20">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label text="{alertMessage}"
+                 fontSize="18"
+                 textAlign="center"
+                 width="400"
+                 maxDisplayedLines="-1"
+                 fontWeight="bold"
+                 color.error="#ff0c0c"
+                 color.help="#376607"/>
+
+        <s:Button label="Ok"
+                  horizontalCenter="0"
+                  click="closeClickHander(event)"
+                  visible="{showClose}"
+                  includeInLayout="{showClose}"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+    </s:Group>
+
+</containers:FMPopup>

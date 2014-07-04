@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:runner="com.gorillalogic.flexmonkey.views.runner.*">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyNode;
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+			
+            [Bindable] public var headAlpha:Number;
+            [Bindable] private var selectedDesc:String;
+            private var _monkeyRunnable:MonkeyRunnable;
+
+            [Bindable] public function get monkeyRunnable():MonkeyRunnable {
+                return this._monkeyRunnable;
+            }
+
+            public function set monkeyRunnable(value:MonkeyRunnable):void {
+                selectedDesc = "";
+                this._monkeyRunnable = value;
+
+                if (_monkeyRunnable is MonkeyNode) {
+                    selectedDesc = (_monkeyRunnable as MonkeyNode).name;
+                } else {
+                    selectedDesc = _monkeyRunnable.getLabel();
+                }
+            }
+
+            private function runTestConsoleMsgHandler(event:Event):void {
+                console.scroller.verticalScrollBar.value = console.scroller.verticalScrollBar.maximum;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Group right="0"
+             left="0"
+             top="0"
+             height="22"
+             alpha="{headAlpha}">
+
+        <s:Rect left="0"
+                right="0"
+                bottom="0"
+                top="0">
+            <s:fill>
+                <s:SolidColor color="#555555"/>
+            </s:fill>
+        </s:Rect>
+
+        <s:Label top="0"
+                 left="5"
+                 bottom="4"
+                 right="25"
+                 text="Item Console :: {selectedDesc}"
+                 color="#ffffff"
+                 fontWeight="bold"
+                 textAlign="left"
+                 verticalAlign="bottom"
+                 width="100%"
+                 maxDisplayedLines="1"/>
+
+        <runner:DisplayRunnerStatusIcon monkeyRunnable="{monkeyRunnable}"
+                                        right="8"
+                                        top="4"/>
+    </s:Group>
+
+    <s:TextArea id="console"
+                left="0"
+                right="0"
+                bottom="0"
+                top="22"
+                text="{monkeyRunnable.runTestConsoleMsg}"
+                editable="false"
+                verticalScrollPolicy="on"
+                updateComplete="runTestConsoleMsgHandler(event)"/>
+
+</s:Group>

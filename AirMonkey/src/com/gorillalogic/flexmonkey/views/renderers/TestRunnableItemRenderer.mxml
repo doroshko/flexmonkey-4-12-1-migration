@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+				autoDrawBackground="false"
+				mouseOver="mouseOverHandler(event)"
+				mouseOut="mouseOutHandler(event)"
+				doubleClickEnabled="true"
+				doubleClick="editButtonClickHandler(event)"
+				dragOver="dragOverHandler(event)"
+				dragExit="dragExitHandler(event)"
+				dragEnter="dragEnterHandler(event)"
+				dragDrop="dragDropHandler(event)"
+				dragComplete="dropCompleteHandler(event)"
+				width="100%" height="29">
+
+	<fx:Script>
+		<![CDATA[
+			import com.gorillalogic.flexmonkey.core.MonkeyNode;
+			import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+			import com.gorillalogic.flexmonkey.events.FMRunnerEvent;
+			import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+			import com.gorillalogic.flexmonkey.model.ApplicationModel;
+			import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+			import com.gorillalogic.flexmonkey.monkeyCommands.CallFunctionMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.PauseMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.SetPropertyMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.StoreValueMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.UIEventMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.VerifyGridMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+			import com.gorillalogic.flexmonkey.monkeyCommands.VerifyPropertyMonkeyCommand;
+			import com.gorillalogic.flexmonkey.utils.Assets;
+			import com.gorillalogic.flexmonkey.views.components.DragDownIndicator;
+			import com.gorillalogic.flexmonkey.views.components.DragUpIndicator;
+			import com.gorillalogic.flexmonkey.views.skins.CopySkin;
+			import com.gorillalogic.framework.FMHub;
+			import com.gorillalogic.flexunit.FlexMonkeyConnectionRunner;
+			import com.gorillalogic.utils.DragRequest;
+			
+			import mx.core.DragSource;
+			import mx.core.UIComponent;
+			import mx.events.DragEvent;
+			import mx.managers.DragManager;
+			
+			import spark.layouts.supportClasses.DropLocation;
+
+			[Bindable] private var showNavigator:Boolean = false;
+			[Bindable] protected var monkeyRunnable:MonkeyRunnable;
+			[Bindable] private var dragSource:DragSource;
+			[Bindable] private var copyDragSource:DragSource;
+
+			private var dropUpIcon:DragUpIndicator;
+			private var dropDownIcon:DragDownIndicator;
+
+			override public function set data(value:Object):void {
+				if(value != null && value is MonkeyRunnable) {
+					monkeyRunnable = null;
+					dragSource null;
+
+					monkeyRunnable = value as MonkeyRunnable;
+					monkeyRunnable.addEventListener("updateRunnableLabel", updateLabelHandler);
+					updateLabelHandler();
+
+					if (monkeyRunnable is UIEventMonkeyCommand) {
+						var c:UIEventMonkeyCommand = monkeyRunnable as UIEventMonkeyCommand;
+						var cmd:String = c.command;
+
+						if (cmd == "Type" || cmd == "Input") {
+							iconImage.source = Assets.keyboardImageClass;
+						} else if (cmd.indexOf("Click") != -1) {
+							iconImage.source = Assets.mouseImageClass;
+						} else {
+							iconImage.source = Assets.lightningImageClass;
+						}
+					} else if (monkeyRunnable is VerifyMonkeyCommand) {
+						iconImage.source = Assets.verifyImageClass;
+					} else if (monkeyRunnable is VerifyGridMonkeyCommand) {
+						iconImage.source = Assets.verifyGridImageClass;
+					} else if (monkeyRunnable is VerifyPropertyMonkeyCommand) {
+						iconImage.source = Assets.verifyPropImageClass;
+					} else if (monkeyRunnable is SetPropertyMonkeyCommand) {
+						iconImage.source = Assets.gearImageClass;
+					} else if (monkeyRunnable is CallFunctionMonkeyCommand) {
+						iconImage.source = Assets.funcImageClass;
+					} else if (monkeyRunnable is StoreValueMonkeyCommand) {
+						iconImage.source = Assets.keyImageClass;
+						iconImage.left = 44;
+					} else if (monkeyRunnable is PauseMonkeyCommand) {
+						iconImage.source = Assets.pauseImageClass;
+					}
+
+					//create drag source
+					dragSource = new DragSource();
+					dragSource.addData(monkeyRunnable, DragRequest.DATA);
+					dragSource.addData(DragRequest.MOVE_MONKEY_RUNNABLE, DragRequest.TYPE);
+
+					copyDragSource = new DragSource();
+					copyDragSource.addData(monkeyRunnable, DragRequest.DATA);
+					copyDragSource.addData(DragRequest.COPY_MONKEY_RUNNABLE, DragRequest.TYPE);
+				}
+			}
+
+			private function updateLabelHandler(event:Event=null):void {
+				labelTextComp.text = monkeyRunnable.getLabel();
+				labelTextComp.toolTip = monkeyRunnable.getLabel();
+			}
+
+			protected function mouseOverHandler(event:MouseEvent):void {
+				if(!DragManager.isDragging) {
+					showNavigator = true;
+
+					// add here for startup performance gain
+					if(!this.contains(rolloverBackground)) {
+						this.addElement(rolloverBackground);
+					}
+
+					// add here for startup performance gain
+					if (!this.contains(dragBar)) {
+						this.addElement(dragBar);
+					}
+
+					// add here for startup performance gain
+					if (!this.contains(copyButton)) {
+						this.addElement(copyButton);
+					}
+
+					// add here for startup performance gain
+					if (!this.contains(playPauseButton)) {
+						this.addElement(playPauseButton);
+					}
+
+					// add here for startup performance gain
+					if (!this.contains(deleteButton)) {
+						this.addElement(deleteButton);
+					}
+				}
+			}
+
+			protected function mouseOutHandler(event:MouseEvent):void {
+				showNavigator = false;
+			}
+
+
+			//
+			// button handlers
+			//
+			protected function deleteButtonClickHandler(event:MouseEvent):void {
+				if(this.isConfirmDeletes()) {
+					FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.CONFIRM_DELETE_MONKEY_RUNNABLE, monkeyRunnable));
+				} else {
+					FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.DELETE_MONKEY_RUNNABLE, monkeyRunnable));
+				}
+			}
+			protected function isConfirmDeletes():Boolean {
+				return true;
+			}
+
+			protected function editButtonClickHandler(event:MouseEvent):void {
+				FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.EDIT_MONKEY_RUNNABLE, monkeyRunnable));
+			}
+
+			protected function playPauseButtonClickHandler(event:MouseEvent):void {
+				FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.SETUP_TEST_RUNNER, monkeyRunnable));
+			}
+
+			//
+			// drag and drop
+			//
+
+			private function dragEnterHandler(event:DragEvent):void {
+				var dragType:String = event.dragSource.dataForFormat(DragRequest.TYPE) as String;
+				var dragData:Object = event.dragSource.dataForFormat(DragRequest.DATA);
+
+				if (isAcceptableDrag(event)) {
+					DragManager.acceptDragDrop(event.currentTarget as UIComponent);
+				}
+			}
+			protected function isAcceptableDrag(event:DragEvent):Boolean {
+				var dragType:String = event.dragSource.dataForFormat(DragRequest.TYPE) as String;
+				var dragData:Object = event.dragSource.dataForFormat(DragRequest.DATA);
+				
+				// can take MonkeyRunnables 
+				// but cannot move myself
+				if (DragRequest.isRunnableDrag(dragType) &&
+					(dragType == DragRequest.COPY_MONKEY_RUNNABLE || monkeyRunnable != dragData)) {
+						return true;
+				}
+				return false;
+			}
+
+			private function dropCompleteHandler(event:DragEvent):void {
+				// make sure position arrows are not being displayed
+				if(dropUpIcon != null) {
+					dropUpIcon.visible = false;
+				}
+
+				if(dropDownIcon) {
+					dropDownIcon.visible = false;
+				}
+			}
+
+			private function dragExitHandler(event:DragEvent):void {
+				if(dropUpIcon != null) {
+					dropUpIcon.visible = false;
+				}
+
+				if(dropDownIcon != null) {
+					dropDownIcon.visible = false;
+				}
+			}
+
+			protected function getDropIndex(event:DragEvent):int {
+				var parentNode:MonkeyNode = monkeyRunnable.parent as MonkeyNode;
+				var dropIndex:int = parentNode.children.getItemIndex(monkeyRunnable);
+				if(isBottomHalf(event)) {
+					dropIndex++;
+				}
+				return dropIndex;
+			}
+			
+			protected function getDropParentNode():MonkeyNode {
+				return monkeyRunnable.parent as MonkeyNode;
+			}
+			
+			private function dragDropHandler(event:DragEvent):void {
+				if(dropUpIcon != null) {
+					dropUpIcon.visible = false;
+				}
+
+				if(dropDownIcon != null) {
+					dropDownIcon.visible = false;
+				}
+
+				var dragType:String = event.dragSource.dataForFormat(DragRequest.TYPE) as String;
+				var dragData:Object = event.dragSource.dataForFormat(DragRequest.DATA);
+				var dropIndex:int = this.getDropIndex(event);
+				var parentNode:MonkeyNode = this.getDropParentNode();
+
+				if (this.isAcceptableDrag(event)) {
+					if (dragType == DragRequest.MOVE_MONKEY_RUNNABLE) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMoveEvent(dragData as MonkeyRunnable, parentNode, dropIndex));
+					} else if (dragType == DragRequest.COPY_MONKEY_RUNNABLE) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createCopyEvent(dragData as MonkeyRunnable, parentNode, dropIndex));
+					} else if (dragType == DragRequest.NEW_PAUSE) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_PAUSE, parentNode, dropIndex));
+					} else if (dragType == DragRequest.NEW_VERIFY) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_VERIFY, parentNode, dropIndex));
+					} else if (dragType == DragRequest.NEW_VERIFY_GRID) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_VERIFY_GRID, parentNode, dropIndex));
+					} else if (dragType == DragRequest.NEW_VERIFY_PROP) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_VERIFY_PROP, parentNode, dropIndex));
+					} else if (dragType == DragRequest.NEW_SET_PROPERTY_CMD) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_SET_PROPERTY_CMD, parentNode, dropIndex));
+					} else if (dragType == DragRequest.NEW_STORE_VALUE_CMD) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_STORE_VALUE_CMD, parentNode, dropIndex));
+					} else if (dragType == DragRequest.NEW_FUNCTION_CMD) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.NEW_FUNCTION_CMD, parentNode, dropIndex));
+					} else if (dragType == DragRequest.MOVE_ALL_RECORDED_ITEMS) {
+						FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createAddEvent(MonkeyRunnableEvent.MOVE_ALL_RECORDED_ITEMS, parentNode, dropIndex));
+					}
+				}
+			}
+
+			private function dragOverHandler(event:DragEvent):void {
+				var dragType:String = event.dragSource.dataForFormat(DragRequest.TYPE) as String;
+				var dragData:Object = event.dragSource.dataForFormat(DragRequest.DATA);
+
+				if (isAcceptableDrag(event)) {
+
+					// add here for startup performance gain
+					if(dropUpIcon == null) {
+						dropUpIcon = new DragUpIndicator();
+						dropUpIcon.visible = false;
+						this.addElement(dropUpIcon);
+					}
+
+					// add here for startup performance gain
+					if(dropDownIcon == null) {
+						dropDownIcon = new DragDownIndicator();
+						dropDownIcon.visible = false;
+						this.addElement(dropDownIcon);
+					}
+
+					if (isBottomHalf(event)) {
+						dropDownIcon.visible = true;
+						dropUpIcon.visible = false;
+					} else {
+						dropUpIcon.visible = true;
+						dropDownIcon.visible = false;
+					}
+				}
+			}
+
+			protected function isBottomHalf(event:DragEvent):Boolean {
+				var pos:DropLocation = event.currentTarget.layout.calculateDropLocation(event);
+				var half:int = this.height / 2;
+
+				if (pos.dropPoint.y < half) {
+					return false;
+				}
+				return true;
+			}
+
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- navigation -->
+		<components:DragComponent id="dragBar"
+								  toolTip="Drag to change Command Location"
+								  dragSource="{dragSource}"
+								  monkeyRunnable="{monkeyRunnable}"
+								  visible="{showNavigator}"
+								  top="9.25"
+								  right="80"/>
+
+		<components:DragComponent id="copyButton"
+								  toolTip="Drag to Copy Command"
+								  skinClass="com.gorillalogic.flexmonkey.views.skins.CopySkin"
+								  dragSource="{copyDragSource}"
+								  visible="{showNavigator}"
+								  top="4"
+								  right="55"/>
+
+		<components:PlayPauseButton id="playPauseButton"
+									toolTip="Play Command"
+									click="playPauseButtonClickHandler(event)"
+									width="20"
+									height="20"
+									visible="{showNavigator}"
+									top="4"
+									right="30.5"/>
+
+		<s:Button id="deleteButton"
+				  toolTip="Delete Command"
+				  skinClass="com.gorillalogic.flexmonkey.views.skins.TrashCanSkin"
+				  click="deleteButtonClickHandler(event)"
+				  visible="{showNavigator}"
+				  top="4"
+				  right="5"/>
+
+
+		<s:Group id="rolloverBackground"
+				 width="95"
+				 right="1"
+				 top="1"
+				 bottom="1"
+				 visible="{showNavigator}">
+			<s:Rect top="0"
+					bottom="0"
+					right="0"
+					left="0">
+				<s:fill>
+					<s:LinearGradient rotation="90">
+						<s:GradientEntry color="#eeeeee"
+										 ratio="0"/>
+						<s:GradientEntry color="#dddddd"
+										 ratio="1"/>
+					</s:LinearGradient>
+				</s:fill>
+			</s:Rect>
+		</s:Group>
+	</fx:Declarations>
+
+
+	<s:Rect left="0"
+			right="0"
+			top="0"
+			bottom="0"
+			topLeftRadiusX="4"
+			bottomLeftRadiusX="4">
+		<s:fill>
+			<s:LinearGradient rotation="90">
+				<s:GradientEntry color="#eeeeee"
+								 ratio="0"/>
+				<s:GradientEntry color="#dddddd"
+								 ratio="1"/>
+			</s:LinearGradient>
+		</s:fill>
+
+		<s:stroke>
+			<s:SolidColorStroke color="#333333"
+								weight="1"/>
+		</s:stroke>
+	</s:Rect>
+
+	<s:Line left="38" height="28">
+		<s:stroke>
+			<s:SolidColorStroke color="#333333"
+								weight="1"/>
+		</s:stroke>
+	</s:Line>
+
+	<s:Label text="{itemIndex+1}"
+			 fontSize="13"
+			 fontStyle="italic"
+			 fontWeight="bold"
+			 width="30"
+			 textAlign="right"
+			 top="9"
+			 left="0" />
+
+	<mx:Image id="iconImage"
+			  top="4"
+			  left="50" />
+
+	<s:Label id="labelTextComp"
+			 fontSize="11"
+			 left="80"
+			 right="10"
+			 top="10"
+			 fontStyle="italic"
+			 maxDisplayedLines="1" />
+
+
+</s:ItemRenderer>

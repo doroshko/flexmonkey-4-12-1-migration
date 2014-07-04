@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="Edit UI Event"
+                    monkeyRunnable="{this.uiEvent}">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.monkeyCommands.UIEventMonkeyCommand;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.events.ListEvent;
+            import mx.events.PropertyChangeEvent;
+
+            private var _uiEvent:UIEventMonkeyCommand;
+
+            [Bindable] public function get uiEvent():UIEventMonkeyCommand {
+                return _uiEvent;
+            }
+
+            public function set uiEvent(value:UIEventMonkeyCommand):void {
+                _uiEvent = value as UIEventMonkeyCommand;
+                var cmd:String = _uiEvent.command;
+
+                if (cmd == "Type" || cmd == "Input") {
+                    titleImageSource = Assets.keyboardImageClass;
+                } else if (cmd.indexOf("Click") != -1) {
+                    titleImageSource = Assets.mouseImageClass;
+                } else {
+                    titleImageSource = Assets.lightningImageClass;
+                }
+
+                if (_uiEvent != null) {
+                    _uiEvent.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, propertyUpdate);
+                }
+            }
+
+            protected function propertyUpdate(event:Event):void {
+                if (_uiEvent.parent != null) {
+                    ApplicationModel.instance.isMonkeyTestFileDirty = true;
+                }
+            }
+
+            protected function uiEventArgsFormItem_itemEditEndHandler(event:ListEvent):void {
+                callLater(notifyLabelUpdateNeeded);
+
+            }
+
+            private function notifyLabelUpdateNeeded():void {
+                _uiEvent.dispatchEvent(new Event("updateRunnableLabel"));
+            }
+
+            protected function retryOnlyOnResponseChangeHandler(event:Event):void {
+                _uiEvent.retryOnlyOnResponse = retryOnlyOnResponseCheckBox.selected;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Group maxHeight="575"
+             maxWidth="650"
+             bottom="0"
+             left="0"
+             right="0"
+             top="0">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"/>
+        </s:layout>
+
+        <mx:Form id="uiEventForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+            <mx:FormItem width="100%"
+                         label="UI Event"
+                         labelWidth="150">
+                <mx:TextInput id="uiEventCommandFormItem"
+                              width="100%"
+                              text="@{ uiEvent.command }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Target Value"
+                         labelWidth="150">
+                <mx:TextInput id="uiEventValueFormItem"
+                              width="100%"
+                              text="@{ uiEvent.value }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Target Property"
+                         labelWidth="150">
+                <mx:TextInput id="uiEventPropFormItem"
+                              width="100%"
+                              text="@{ uiEvent.prop }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Container Value"
+                         labelWidth="150">
+                <mx:TextInput id="uiEventContainerValueFormItem"
+                              width="100%"
+                              text="@{ uiEvent.containerValue }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Container Property"
+                         labelWidth="150">
+                <mx:TextInput id="uiEventContainerPropFormItem"
+                              width="100%"
+                              text="@{ uiEvent.containerProp }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Arguments"
+                         labelWidth="150">
+                <mx:List id="uiEventArgsFormItem"
+                         width="100%"
+                         height="69"
+                         dataProvider="{ uiEvent.args }"
+                         editable="true"
+                         alternatingItemColors="[0xFFFFFF,0xDFDFDF]"
+                         itemEditEnd="uiEventArgsFormItem_itemEditEndHandler(event)"/>
+            </mx:FormItem>
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form id="retryForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+
+            <mx:FormItem width="100%"
+                         label="Retry Delay"
+                         labelWidth="150">
+                <mx:TextInput width="100%"
+                              text="@{ uiEvent.delay }"
+                              restrict="0-9"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Retry Attempts"
+                         labelWidth="150">
+                <mx:TextInput width="100%"
+                              text="@{ uiEvent.attempts }"
+                              restrict="0-9"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Total Retry Timeout"
+                         labelWidth="150">
+                <mx:TextInput width="100%"
+                              text="{ uiEvent.timeOut }"
+                              enabled="false"
+                              editable="false"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Retry only on Response"
+                         labelWidth="150">
+
+                <s:CheckBox id="retryOnlyOnResponseCheckBox"
+                            width="100%"
+                            selected="{uiEvent.retryOnlyOnResponse}"
+                            change="retryOnlyOnResponseChangeHandler(event)"/>
+            </mx:FormItem>
+
+        </mx:Form>
+    </s:Group>
+
+
+</containers:FMPopup>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SkinnableComponent xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+                      xmlns:mx="library://ns.adobe.com/flex/mx"
+                      dragEnter="dragEnterHandler(event)"
+                      dragDrop="dragDropHandler(event)"
+                      dragOver="dragOverHandler(event)"
+                      dragExit="dragExitHandler(event)">
+
+    <fx:Metadata>
+		[SkinState("up")]
+		[SkinState("over")]
+	</fx:Metadata>
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+            import com.gorillalogic.flexmonkey.events.InteractionEvent;
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.events.RecordEvent;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.utils.DragRequest;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.core.UIComponent;
+            import mx.events.DragEvent;
+            import mx.managers.DragManager;
+            private var _skinState:String;
+
+            protected function dragOverHandler(event:MouseEvent):void {
+                this.skinState = "over";
+            }
+
+            protected function dragExitHandler(event:MouseEvent):void {
+                this.skinState = "up";
+            }
+
+            public function set skinState(value:String):void {
+                _skinState = value;
+                invalidateSkinState();
+            }
+
+            override protected function getCurrentSkinState():String {
+                return this._skinState;
+            }
+
+            protected function dragEnterHandler(event:DragEvent):void {
+                DragManager.acceptDragDrop(event.currentTarget as UIComponent);
+            }
+
+            protected function dragDropHandler(event:DragEvent):void {
+                this.skinState = "up";
+
+                if (event.dragSource.dataForFormat(DragRequest.DATA) != null) {
+                    var r:MonkeyRunnable = event.dragSource.dataForFormat(DragRequest.DATA) as MonkeyRunnable;
+
+                    if (ProjectTestModel.instance.isRunnableInRecording(r)) {
+                        FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.DELETE_MONKEY_RUNNABLE, r));
+                    } else {
+                        FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.CONFIRM_DELETE_MONKEY_RUNNABLE, r));
+                    }
+                } else if ((event.dragSource.dataForFormat(DragRequest.TYPE) as String) == DragRequest.MOVE_ALL_RECORDED_ITEMS) {
+                    FMHub.instance.dispatchEvent(new RecordEvent(RecordEvent.DELETE_ITEMS));
+                }
+            }
+        ]]>
+    </fx:Script>
+
+</s:SkinnableComponent>

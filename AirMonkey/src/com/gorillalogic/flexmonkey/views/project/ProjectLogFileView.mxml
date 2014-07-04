@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU General Public License, v2.
+-->
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          skinClass="com.gorillalogic.flexmonkey.views.skins.WindowSkin"
+          creationComplete="loadLogFile(event)"
+          showStatusBar="false"
+          width="700"
+          height="550"
+          title="FlexMonkey :: Log File">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.flexmonkey.utils.FMLogger;
+            import com.gorillalogic.framework.FMHub;
+
+            protected function loadLogFile(event:Event):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.LOAD_LOG_FILE));
+            }
+
+            protected function purgeLogFileCickHandler(event:Event):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.PURGE_LOG_FILE));
+            }
+        ]]>
+    </fx:Script>
+
+    <s:HGroup left="5"
+              right="5"
+              top="5"
+              verticalAlign="middle">
+        <s:Label text="Log File Location:"
+                 fontWeight="bold"
+                 color="#eeeeee"/>
+        <s:TextInput text="{ApplicationModel.instance.logFileLocation}"
+                     editable="false"
+                     selectable="true"
+                     width="100%"
+                     fontSize="10"/>
+    </s:HGroup>
+
+    <s:TextArea id="logFileWindow"
+                left="5"
+                right="5"
+                top="30"
+                bottom="30"
+                fontSize="10"
+                text="{ApplicationModel.instance.logFileData}"
+                editable="false"
+                borderColor="#000000"
+                borderAlpha="1"
+                borderVisible="true"/>
+
+    <s:HGroup bottom="5"
+              horizontalCenter="0">
+        <s:Button label="Load / Refresh"
+                  click="loadLogFile(event)"/>
+        <s:Button label="Purge"
+                  click="purgeLogFileCickHandler(event)"/>
+    </s:HGroup>
+</s:Window>

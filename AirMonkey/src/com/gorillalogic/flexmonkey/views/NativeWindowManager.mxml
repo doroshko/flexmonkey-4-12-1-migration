@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:views="com.gorillalogic.flexmonkey.views.*"
+         xmlns:runner="com.gorillalogic.flexmonkey.views.runner.*"
+         xmlns:project="com.gorillalogic.flexmonkey.views.project.*"
+         width="0"
+         height="0"
+         creationComplete="create()">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+            import com.gorillalogic.flexmonkey.events.ProjectFilesEvent;
+            import com.gorillalogic.flexmonkey.events.SnapshotEvent;
+            import com.gorillalogic.framework.FMHub;
+            
+            import mx.controls.Alert;
+            import mx.core.IFlexDisplayObject;
+            import mx.core.UIComponent;
+            import mx.managers.PopUpManager;
+            
+            import spark.components.Window;
+
+            private var hub:FMHub;
+            private var loadPropertiesOnStartup:Boolean = false;
+            private var _airMonkeyWindow:Window;
+
+            protected function create():void {
+                hub = FMHub.instance;
+
+                hub.listen(ApplicationEvent.OPEN_HOW_TO_VIDEOS, openHowToVideoHandler, this);
+
+                hub.listen(ProjectFilesEvent.OPEN_PROJECT_PROPERTIES_WINDOW, openProjectPropertiesWindow, this);
+                hub.listen(ApplicationEvent.OPEN_LOG_FILE_VIEW, openProjectLogFile, this);
+                hub.listen(ApplicationEvent.OPEN_ENV_FILE_VIEW, openProjectEnvFile, this);
+                hub.listen(ApplicationEvent.OPEN_APPLICATION_AUTOMATION_TREE_VIEW, openApplicationAutomationTreeView, this);
+
+				hub.listen(ApplicationEvent.OPEN_RECORD_WINDOW_VIEW, openRecordWindowView, this);
+				hub.listen(ApplicationEvent.CLOSE_RECORD_WINDOW_VIEW, closeRecordWindowView, this);
+
+				hub.listen(ApplicationEvent.HELP_ABOUT, displayAboutView, this);
+
+                hub.listen(ProjectFilesEvent.PROMPT_FOR_NEW_PROJECT, openProjectPropertiesWindowOnStartup, this);
+                hub.listen(ProjectFilesEvent.PROMPT_FOR_SAVE, displaySaveWarningVew, this);
+
+                hub.listen(SnapshotEvent.DISPLAY_SNAPSHOT, openTestRunnerSnapshotWindow, this);
+            }
+
+            public function get airMonkeyWindow():Window {
+                return _airMonkeyWindow;
+            }
+
+            public function set airMonkeyWindow(value:Window):void {
+                _airMonkeyWindow = value;
+                airMonkeyLoaded();
+            }
+
+            private function openProjectPropertiesWindowOnStartup(event:Event):void {
+                if (_airMonkeyWindow != null) {
+                    openProjectPropertiesWindow(null, true);
+                } else {
+                    loadPropertiesOnStartup = true;
+                }
+            }
+
+            private function airMonkeyLoaded():void {
+                if (loadPropertiesOnStartup) {
+                    openProjectPropertiesWindow(null, true);
+                }
+            }
+
+            private function displayAlert(alertWindow:Object):void {
+                //check for different target window
+                var launchTarget:UIComponent = _airMonkeyWindow;
+
+                //bring launch window to front
+                if (launchTarget is Window) {
+                    (launchTarget as Window).orderToFront();
+                }
+
+                //load window
+                PopUpManager.addPopUp(IFlexDisplayObject(alertWindow), launchTarget, true);
+            }
+
+            private function displayAbout():void {
+                var appDescriptor:XML = NativeApplication.nativeApplication.applicationDescriptor;
+                var ns:Namespace = appDescriptor.namespace();
+                var appCopyright:String = appDescriptor.ns::copyright;
+                var appVersion:String = appDescriptor.ns::version;
+
+                Alert.show("FlexMonkey " + appVersion);
+            }
+
+
+            private function openHowToVideoHandler(event:Event):void {
+                if (howToVideos.nativeWindow != null && howToVideos.closed) {
+                    howToVideos = new HowToVideos();
+                }
+                howToVideos.open();
+            }
+
+            private function openProjectPropertiesWindow(event:Event = null,
+                                                         loadedOnStartup:Boolean = false):void {
+                if (projectPropertiesWindow.nativeWindow != null && projectPropertiesWindow.closed) {
+                    projectPropertiesWindow = new ProjectPropertiesWindowView();
+                }
+
+                projectPropertiesWindow.open();
+                projectPropertiesWindow.showingWindowOnStartup = loadedOnStartup;
+                projectPropertiesWindow.nativeWindow.x = _airMonkeyWindow.nativeWindow.x - 35;
+                projectPropertiesWindow.nativeWindow.y = _airMonkeyWindow.nativeWindow.y + 50;
+                projectPropertiesWindow.orderInFrontOf(_airMonkeyWindow);
+            }
+
+            private function openProjectLogFile(event:Event = null):void {
+                if (projectLogFileView.nativeWindow != null && projectLogFileView.closed) {
+                    projectLogFileView = new ProjectLogFileView();
+                }
+
+                projectLogFileView.open();
+                projectLogFileView.nativeWindow.x = _airMonkeyWindow.nativeWindow.x + 550;
+                projectLogFileView.nativeWindow.y = _airMonkeyWindow.nativeWindow.y + 50;
+            }
+
+            private function openProjectEnvFile(event:Event = null):void {
+                if (projectEnvFileView.nativeWindow != null && projectEnvFileView.closed) {
+                    projectEnvFileView = new ProjectEnvFileView();
+                }
+
+                projectEnvFileView.open();
+                projectEnvFileView.nativeWindow.x = _airMonkeyWindow.nativeWindow.x + 500;
+                projectEnvFileView.nativeWindow.y = _airMonkeyWindow.nativeWindow.y + 65;
+            }
+
+            private function openApplicationAutomationTreeView(event:Event = null):void {
+                if (projectApplicationAutomationTreeView.nativeWindow != null && projectApplicationAutomationTreeView.closed) {
+                    projectApplicationAutomationTreeView = new ProjectApplicationAutomationTreeView();
+                }
+
+                projectApplicationAutomationTreeView.open();
+                projectApplicationAutomationTreeView.nativeWindow.x = _airMonkeyWindow.nativeWindow.x + 475;
+                projectApplicationAutomationTreeView.nativeWindow.y = _airMonkeyWindow.nativeWindow.y + 35;
+            }
+
+			private function openRecordWindowView(event:Event = null):void {
+				var rwx:Number = _airMonkeyWindow.nativeWindow.x + 135;
+				var rwy:Number = _airMonkeyWindow.nativeWindow.y + 85;
+				var rww:Number = 490;
+				var rwh:Number = 420;
+				var rwaif:Boolean = recordWindowView.alwaysInFront;
+				
+				if (recordWindowView.nativeWindow != null) {
+					rwx = recordWindowView.lastX;	
+					rwy = recordWindowView.lastY;	
+					rww = recordWindowView.width;	
+					rwh = recordWindowView.height;	
+				}
+
+				if (recordWindowView.nativeWindow != null && recordWindowView.closed) {
+					recordWindowView = new RecordWindow();
+				}
+				
+				recordWindowView.width = rww;
+				recordWindowView.height = rwh;
+				recordWindowView.alwaysInFront = rwaif;
+				recordWindowView.open();
+				recordWindowView.nativeWindow.x = rwx;
+				recordWindowView.nativeWindow.y = rwy;
+				
+			}
+			
+			private function closeRecordWindowView(event:Event = null):void {
+				// handle checks manually here because getters sometimes NPE
+				if (recordWindowView==null) {
+					return;
+				}
+				if (recordWindowView.nativeWindow !=null) {
+					if (recordWindowView.closed) {
+						return;
+					}
+				}
+				recordWindowView.close();
+			}
+			
+            private function openTestRunnerSnapshotWindow(event:SnapshotEvent):void {
+                if (testRunnerSnapshotWindow.nativeWindow != null && testRunnerSnapshotWindow.closed) {
+                    testRunnerSnapshotWindow = new TestRunnerSnapshotWindow();
+                }
+
+                testRunnerSnapshotWindow.monkeyRunnable = event.verify;
+                testRunnerSnapshotWindow.open();
+                testRunnerSnapshotWindow.nativeWindow.x = _airMonkeyWindow.nativeWindow.x + 475;
+                testRunnerSnapshotWindow.nativeWindow.y = _airMonkeyWindow.nativeWindow.y + 55;
+            }
+
+            private function displayAboutView(event:Event):void {
+                var v:AboutView = new AboutView();
+                displayAlert(v);
+            }
+
+            private function displaySaveWarningVew(event:Event):void {
+                var v:SaveWarningDialogView = new SaveWarningDialogView();
+                displayAlert(v);
+            }
+        ]]>
+    </fx:Script>
+
+    <fx:Declarations>
+        <project:ProjectPropertiesWindowView id="projectPropertiesWindow"/>
+        <project:ProjectLogFileView id="projectLogFileView"/>
+        <project:ProjectEnvFileView id="projectEnvFileView"/>
+        <project:ProjectApplicationAutomationTreeView id="projectApplicationAutomationTreeView"/>
+		<views:RecordWindow id="recordWindowView"/>
+        <runner:TestRunnerSnapshotWindow id="testRunnerSnapshotWindow"/>
+        <views:HowToVideos id="howToVideos"/>
+    </fx:Declarations>
+
+</s:Group>

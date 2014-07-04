@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU General Public License, v2.
+-->
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          skinClass="com.gorillalogic.flexmonkey.views.skins.WindowSkin"
+          creationComplete="loadFile(event)"
+          showStatusBar="false"
+          width="700"
+          height="550"
+          title="FlexMonkey :: Current Environment File"
+          xmlns:forms="com.gorillalogic.flexmonkey.views.forms.*">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.utils.FMMessageConstants;
+            import com.gorillalogic.framework.FMHub;
+
+            [Bindable] private var model:ApplicationModel = ApplicationModel.instance;
+
+            private function loadFile(event:Event):void {
+                if (ApplicationModel.instance.isConnected) {
+                    FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.GET_ENV_FILE));
+                }
+            }
+
+            protected function copyContentsClickHandler(event:MouseEvent):void {
+                Clipboard.generalClipboard.clear();
+                Clipboard.generalClipboard.setData(ClipboardFormats.TEXT_FORMAT, ApplicationModel.instance.applicationEnvFileData.envData);
+
+                alertDialog.alertMessage = "Contents of the file have been copied to your clipboard.";
+                alertDialog.visible = true;
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Label text="Default Environment File: "
+             fontWeight="bold"
+             left="5"
+             top="5"
+             color="#eeeeee"/>
+
+    <s:Label text="{model.applicationEnvFileData.usingDefaultEnv}"
+             left="155"
+             top="5"
+             color="#eeeeee"/>
+
+    <s:RichEditableText fontStyle="italic"
+                        left="5"
+                        right="5"
+                        top="25"
+                        color="#eeeeee">
+        <s:textFlow>
+            <s:TextFlow>
+                <s:p>{FMMessageConstants.ENV_FILE_HELP}	
+					<s:a href="{FMMessageConstants.ENV_FILE_HELP_LINK}">"{FMMessageConstants.ENV_FILE_HELP_LINK_LABEL}</s:a>
+                </s:p>
+            </s:TextFlow>
+        </s:textFlow>
+    </s:RichEditableText>
+
+    <s:TextArea id="fileDataTextArea"
+                text="{model.applicationEnvFileData.envData}"
+                editable="false"
+                left="5"
+                right="5"
+                top="105"
+                bottom="30"
+                borderColor="#000000"
+                borderAlpha="1"
+                borderVisible="true"/>
+
+
+    <s:HGroup bottom="5"
+              horizontalCenter="0">
+        <s:Button label="Refresh"
+                  click="loadFile(event)"
+                  enabled="{model.isConnected}"/>
+        <s:Button label="Copy Contents"
+                  click="copyContentsClickHandler(event)"/>
+    </s:HGroup>
+
+    <forms:AlertDialog id="alertDialog"
+                       visible="false"/>
+    <forms:AlertDialog id="notConnectedMessage"
+                       alertMessage="FlexMonkey must be connected to your application before you can view the current environment file."
+                       showClose="false"
+                       visible="{!model.isConnected}"/>
+
+</s:Window>

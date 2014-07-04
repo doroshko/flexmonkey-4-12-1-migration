@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+                       xmlns:mx="library://ns.adobe.com/flex/mx"
+                       xmlns:s="library://ns.adobe.com/flex/spark"
+                       xmlns:maps="com.gorillalogic.flexmonkey.application.maps.*"
+                       xmlns:framework="com.gorillalogic.framework.*"
+                       xmlns:controllers="com.gorillalogic.flexmonkey.controllers.*"
+                       xmlns:managers="com.gorillalogic.flexmonkey.application.managers.*"
+                       xmlns:application="com.gorillalogic.flexmonkium.application.*"
+                       xmlns:monkeyCommands="com.gorillalogic.flexmonkey.monkeyCommands.*"
+                       xmlns:core="com.gorillalogic.flexmonkey.core.*"
+                       xmlns:controller="com.gorillalogic.controller.*"
+                       xmlns:controller1="com.gorillalogic.flexmonkey.controller.*"
+                       initialize="initializeHandler()"
+                       applicationComplete="applicationComplete()"
+                       alwaysInFront="true"
+                       visible="false"
+                       xmlns:monkeylink="com.gorillalogic.monkeylink.*">
+
+    <fx:Declarations>
+        <fx:Array id="controllers">
+            <controllers:ApplicationController/>
+
+            <monkeylink:MonkeyLinkConsoleConnectionController/>
+        </fx:Array>
+    </fx:Declarations>
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkium.views.FlexMonkiumWindowView;
+            import com.gorillalogic.framework.FMHub;
+
+            public var flexMonkiumWindowView:FlexMonkiumWindowView = new FlexMonkiumWindowView();
+
+            private function initializeHandler():void {
+                styleManager.loadStyleDeclarations("assets/airmonkey.swf", true);
+            }
+
+            private function applicationComplete():void {
+                FMHub.instance.init(controllers);
+                ApplicationModel.instance.airMonkeyWindow = flexMonkiumWindowView;
+                flexMonkiumWindowView.open();
+            }
+        ]]>
+    </fx:Script>
+
+    <s:layout>
+        <s:HorizontalLayout horizontalAlign="center"
+                            verticalAlign="middle"/>
+
+    </s:layout>
+
+</s:WindowedApplication>
+

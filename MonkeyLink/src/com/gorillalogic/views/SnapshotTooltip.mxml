@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+           width="350"
+           height="100%"
+           horizontalScrollPolicy="off"
+           verticalScrollPolicy="off"
+           backgroundColor="0xFFFFFF"
+           borderColor="0xff0000"
+           borderStyle="solid"
+           creationComplete="create(event)">
+
+    <mx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.core.MonkeyUtils;
+			import com.gorillalogic.utils.MonkeyAutomationManager;
+			import com.gorillalogic.utils.MonkeyMagicAutomationDelegate;
+			
+			import mx.binding.utils.ChangeWatcher;
+			import mx.containers.HBox;
+			import mx.containers.VBox;
+			import mx.controls.Alert;
+			import mx.controls.Button;
+			import mx.controls.Text;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+
+            [Bindable] public var automationObject:UIComponent;
+            private var infoArray:Array;
+            private var selectedItem:Object;
+			public var closeFunction:Function;
+
+            protected function create(event:FlexEvent):void {
+                ChangeWatcher.watch(this, "automationObject", automationObjectChanged);
+            }
+
+            protected function automationObjectChanged(event:Event):void {
+                infoArray = MonkeyUtils.dumpFullComponentTree(automationObject) as Array;
+
+                if (infoArray != null && infoArray.length > 0) {
+                    selectedItem = infoArray[0];
+
+                    if (selectedItem != null) {
+                        if (this.numChildren > 1) {
+                            this.removeChildAt(1);
+                        }
+
+                        var contextBox:VBox = new VBox();
+                        contextBox.id = "contextBox";
+                        contextBox.x = 5
+                        contextBox.y = 5;
+                        contextBox.percentWidth = this.width - 10;
+                        contextBox.setStyle("verticalGap", 2);
+                        contextBox.horizontalScrollPolicy = "off";
+                        contextBox.verticalScrollPolicy = "off";
+
+                        var s:int = 0;
+
+                        if (!MonkeyAutomationManager.instance.isFlex4) {
+                            s += 20;
+                        }
+
+                        s += addStringProperty(selectedItem.name as String, "Class Name", contextBox);
+                        s += addStringProperty(selectedItem.id as String, "Id", contextBox);
+                        s += addStringProperty(selectedItem.parent as String, "Parent", contextBox);
+                        s += addStringProperty(selectedItem.automationName as String, "Automation Name", contextBox);
+                        s += addStringProperty(new String(selectedItem.numAutomationChildren), "Num of Automation Children", contextBox);
+                        s += addStringProperty(selectedItem.automationOwner as String, "Automation Owner", contextBox);
+                        s += addStringProperty(selectedItem.automationClass as String, "Automation Class", contextBox);
+                        s += addStringProperty(selectedItem.text as String, "Text", contextBox);
+                        s += addStringProperty(selectedItem.label as String, "Label", contextBox);
+
+                        this.height = s +100;
+                        contextBox.height = s+100;
+						var hbox:HBox = new HBox();
+						var expose:Button = new Button();
+						expose.label = "Include Children";
+						expose.id = selectedItem.automationName + ".button";
+						expose.addEventListener(MouseEvent.CLICK, doAddToList);
+						hbox.addChild(expose);
+						var close:Button = new Button();
+						close.label = "Close";
+			
+						close.addEventListener(MouseEvent.CLICK, closeFunctionWrap);
+						hbox.addChild(close);
+						contextBox.addChild(hbox);
+                        this.addChild(contextBox);
+	
+                    }
+                }
+            }
+			private function closeFunctionWrap(event:Event):void{
+				closeFunction.call();
+			}
+            private function doAddToList(whatToAdd:Event):void{
+				var whatToAddString:String = (whatToAdd.target as Button).id.split(".")[0];
+				MonkeyMagicAutomationDelegate.elementsToExpose.addItem(whatToAddString);
+				closeFunction.call();
+				mx.controls.Alert.show("'" + whatToAddString + "' has been expanded to show all children.");
+			}
+            private function addStringProperty(stg:String, desc:String, contextBox:VBox):int {
+                if (stg != null && stg.length > 0) {
+                    var text:String = "<b>" + desc + ": </b>" + stg;
+                    var m:TextLineMetrics = textMeassureComp.measureHTMLText(text);
+                    var w:int = 330;
+                    var h:int = (Math.ceil(m.width / w) * 16) + 4;
+                    var t:Object;
+                    var descPadding:int = 0;
+
+                    // mx way fails when flash text engine is used ... so we toggle the text & label component
+                    if (MonkeyAutomationManager.instance.isFlex4) {
+                        var sparkLabel:Class = getDefinitionByName("spark.components.Label") as Class;
+                        var l:Object = new sparkLabel();
+                        l.setStyle("fontWeight", "bold");
+                        l.text = desc;
+                        contextBox.addChild(l as UIComponent);
+                        descPadding = 18;
+
+                        t = new sparkLabel();
+                        t.setStyle("fontStyle", "italic");
+                        t.text = stg;
+                        t.maxDisplayedLines = -1;
+                    } else {
+                        t = new Text();
+                        t.htmlText = text;
+                    }
+
+                    t.width = w;
+                    t.height = h;
+
+                    contextBox.addChild(t as UIComponent);
+                    return t.height + descPadding;
+                }
+                return 0;
+            }
+        ]]>
+    </mx:Script>
+
+    <mx:Text id="textMeassureComp"
+             width="330"
+             includeInLayout="false"
+             visible="false"/>
+
+</mx:Canvas>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+             xmlns:s="library://ns.adobe.com/flex/spark"
+             xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+             width="19"
+             height="19"
+             alpha.disabled="0.5">
+
+    <fx:Metadata>
+        [HostComponent("com.gorillalogic.flexmonkey.views.components.RecordButton")]
+    </fx:Metadata>
+
+    <s:states>
+        <s:State name="up"/>
+        <s:State name="over"/>
+        <s:State name="down"/>
+        <s:State name="disabled"/>
+        <s:State name="upRecord"/>
+        <s:State name="overRecord"/>
+        <s:State name="downRecord"/>
+        <s:State name="disabledRecord"/>
+    </s:states>
+
+
+    <!-- roll over -->
+    <s:Ellipse horizontalCenter="0"
+               verticalCenter="0"
+               width="19.5"
+               height="19.5"
+               includeIn="over,overRecord">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry color="#ffffff"
+                                 ratio="0"/>
+                <s:GradientEntry id="bottomColor"
+                                 color="#ffccbb"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke id="strokeColor"
+                                color="#d0d0d0"/>
+        </s:stroke>
+        <s:filters>
+            <s:GlowFilter id="glow"
+                          color="#888888"
+                          inner="false"
+                          blurX="8"
+                          blurY="8"
+                          alpha=".5"/>
+        </s:filters>
+    </s:Ellipse>
+
+
+    <s:Ellipse horizontalCenter="0"
+               verticalCenter="0"
+               width="18"
+               height="18">
+        <s:fill>
+            <s:SolidColor color="#ff0c0c"
+                          color.disabledRecord="#ffffff"
+                          color.downRecord="#ffffff"
+                          color.overRecord="#ffffff"
+                          color.upRecord="#ffffff"
+                          alpha="1"/>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke color="#777777"
+                                weight="1"/>
+        </s:stroke>
+    </s:Ellipse>
+
+    <s:Ellipse horizontalCenter="0"
+               verticalCenter="0"
+               width="9"
+               height="9">
+        <s:fill>
+            <s:SolidColor color="#ffffff"
+                          color.disabledRecord="#ff0c0c"
+                          color.downRecord="#ff0c0c"
+                          color.overRecord="#ff0c0c"
+                          color.upRecord="#ff0c0c"
+                          alpha="1"/>
+        </s:fill>
+    </s:Ellipse>
+	<s:Rect horizontalCenter="0"
+			   verticalCenter="0"
+			   width="9"
+			   height="9" excludeFrom="disabledRecord, downRecord, overRecord, upRecord">
+		<s:fill>
+			<s:SolidColor color="#ffffff"
+
+						  alpha="1"/>
+		</s:fill>
+	</s:Rect>
+
+    <!-- click -->
+    <s:Ellipse horizontalCenter="0"
+               verticalCenter="0"
+               width="19"
+               height="19"
+               includeIn="down,downRecord">
+        <s:fill>
+            <s:SolidColor color="#d0d0d0"
+                          alpha=".5"/>
+        </s:fill>
+    </s:Ellipse>
+
+
+</s:SparkSkin>

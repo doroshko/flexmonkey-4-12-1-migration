@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+         creationComplete="create()"
+         left="5"
+         right="5"
+         bottom="5"
+         top="5"
+         width="650"
+         height="550">
+
+    <fx:Metadata>
+		[Event(name="close",type="flash.events.Event")]
+		[Event(name="cancel",type="flash.events.Event")]
+	</fx:Metadata>
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+			import com.gorillalogic.flexmonkey.model.ApplicationModel;
+			import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+			import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+			import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+			import com.gorillalogic.framework.FMHub;
+			import com.gorillalogic.utils.AttributeFinder;
+			import com.gorillalogic.utils.MonkeyMagicAutomationDelegate;
+			
+			import mx.binding.utils.ChangeWatcher;
+			import mx.collections.ArrayCollection;
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+
+            [Bindable] private var model:ProjectTestModel;
+
+            [Bindable] public var isNewVerify:Boolean = true;
+            [Bindable] public var propertyCollection:ArrayCollection;
+			[Bindable] private var _showCheckBoxes = true;
+			[Bindable] private var _exploreView = false;
+            private var _verify:VerifyMonkeyCommand;
+
+            private var target:Object;
+            private var propertySort:Sort;
+            private var attributeFinder:AttributeFinder = new AttributeFinder();
+            private var propertyFilter:String = null;
+			
+
+            private function create():void {
+                model = ProjectTestModel.instance;
+                this.addEventListener("selectAllSpyItems", selectAllHandler);
+                this.addEventListener("unselectAllSpyItems", deselectAllHandler);
+            }
+			
+			[Bindable] public function get okButtonLabel():String {
+				return okButton.label;
+			}
+			public function set exploreView(isExploreView:Boolean):void{
+				this._exploreView = isExploreView;
+			}
+			public function set okButtonLabel(value:String):void {
+				okButton.label = value;
+			}
+            public function set showCheckBoxes(display:Boolean):void{
+				_showCheckBoxes = display;
+			}
+            [Bindable] public function get verify():VerifyMonkeyCommand {
+                return _verify;
+            }
+
+            public function set verify(value:VerifyMonkeyCommand):void {
+                _verify = value;
+
+                // reset defaults
+                propertyFilter = null;
+                filterTextInput.text = null;
+
+                //listen for targetVO properties
+                if (_verify != null) {
+                    ChangeWatcher.watch(verify, "targetVO", setupPropertyCollection);
+                    ChangeWatcher.watch(verify, [ "targetVO", "propertyArray" ], setupPropertyCollection);
+                }
+            }
+
+            // setup property collection
+            private function setupPropertyCollection(event:Event):void {
+                if (verify.targetVO != null) {
+                    propertyCollection = new ArrayCollection(verify.targetVO.propertyArray);
+                    propertySort = new Sort();
+                    propertySort.fields = [ new SortField("name", true)];
+                    propertyCollection.sort = propertySort;
+                    propertyCollection.filterFunction = filterProperties;
+                    propertyCollection.refresh();
+                }
+            }
+
+            // return selected properties
+            private function getSelectedProperties(currentCol:ArrayCollection):ArrayCollection {
+                var col:ArrayCollection = new ArrayCollection(currentCol.source);
+
+                for each (var o:Object in propertyCollection) {
+                    if (o.selected) {
+                        o.selected = false;
+                        o.expectedValue = o.actualValue;
+
+                        var alreadyInList:Boolean = false;
+
+                        for each (var curObj:Object in currentCol) {
+                            if (o.name == curObj.name) {
+                                alreadyInList = true;
+                            }
+                        }
+
+                        if (!alreadyInList) {
+                            col.addItem(o);
+                        }
+                    }
+                }
+                return col;
+            }
+
+            // filter local property collection
+            private function filterProperties(item:Object):Boolean {
+                if (propertyFilter == null || propertyFilter == "") {
+                    return true;
+                } else {
+                    return item.name.toLowerCase().indexOf(propertyFilter) >= 0;
+                }
+            }
+
+            // select all items
+            private function selectAllHandler(event:Event):void {
+                for each (var o:Object in propertyCollection) {
+                    o.selected = true;
+                }
+            }
+
+            // deselect all items
+            private function deselectAllHandler(event:Event):void {
+                for each (var o:Object in propertyCollection) {
+                    o.selected = false;
+                }
+            }
+
+            // filter on text change
+            private function filterChangeHandler(event:Event):void {
+                if (propertyCollection != null) {
+                    propertyFilter = filterTextInput.text;
+                    propertyCollection.refresh();
+                }
+            }
+
+            // clear property filter
+            protected function clearFilterClickHandler(event:MouseEvent = null):void {
+                if (propertyCollection != null) {
+                    propertyFilter = null;
+                    filterTextInput.text = null;
+                    propertyCollection.refresh();
+                }
+            }
+
+            protected function spyWindowOkClickHandler(event:MouseEvent):void {
+                verify.attributes = getSelectedProperties(verify.attributes);
+
+                ApplicationModel.instance.isSpyHeaderChecked = false;
+                clearFilterClickHandler();
+
+                FMHub.instance.dispatchEvent(MonkeyRunnableEvent.createMonkeyRunnableEvent(MonkeyRunnableEvent.EDIT_MONKEY_RUNNABLE, verify));
+            }
+
+            protected function cancelClickHandler(event:MouseEvent):void {
+                ApplicationModel.instance.isSpyHeaderChecked = false;
+                clearFilterClickHandler();
+                dispatchEvent(new Event("cancel"));
+            }
+			
+            protected function hideClickHandler(event:MouseEvent):void {
+                ApplicationModel.instance.isSpyHeaderChecked = false;
+                clearFilterClickHandler();
+                dispatchEvent(new Event("close"));
+            }
+
+        ]]>
+    </fx:Script>
+
+    <components:AdvancedTextInput id="filterTextInput"
+                                  promptText="-- Filter Properties --"
+                                  width="300"
+                                  left="0"
+                                  skinClass="com.gorillalogic.flexmonkey.views.skins.AdvancedTextInputSkin"
+                                  change="filterChangeHandler(event)"/>
+
+    <s:Button click="clearFilterClickHandler(event)"
+              skinClass="com.gorillalogic.flexmonkey.views.skins.SimpleXButtonSkin"
+              left="280"
+              top="1"/>
+
+    <s:Button label="Hide Component Selection"
+              skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"
+              click="hideClickHandler(event)"
+              visible="{!isNewVerify}"
+              top="2"
+              right="1"/>
+
+
+    <!-- properties data grid -->
+    <mx:DataGrid id="propertiesGrid"
+                 top="30"
+                 bottom="25"
+                 left="0"
+                 right="0"
+                 dataProvider="{propertyCollection}"
+                 selectionColor="#999999"
+                 alternatingItemColors="[#ffffff, #eeeeee]"
+                 rollOverColor="#999999">
+        <mx:columns>
+            <mx:DataGridColumn width="30"
+                               headerText=""
+                               dataField="selected"
+                               itemRenderer="com.gorillalogic.flexmonkey.views.renderers.SpyWindowCheckBoxItemRenderer"
+                               headerRenderer="com.gorillalogic.flexmonkey.views.renderers.HeaderSpyWindowCheckBoxItemRenderer"
+                               sortable="false" visible="{_showCheckBoxes}"/>
+            <mx:DataGridColumn width="310"
+                               headerText="Property"
+                               dataField="name"/>
+            <mx:DataGridColumn width="310"
+                               headerText="Value"
+                               dataField="actualValue"/>
+        </mx:columns>
+    </mx:DataGrid>
+
+
+    <!-- form navigation items -->
+   <s:HGroup horizontalCenter="0"
+			 bottom="0" visible="{!_exploreView}">
+	   
+ 
+    <s:HGroup horizontalCenter="0"
+              bottom="0"
+              visible="{isNewVerify}">
+        <s:Button label="{okButtonLabel}" id="okButton"
+                  click="spyWindowOkClickHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+        <s:Button label="Cancel"
+                  click="cancelClickHandler(event)"
+                  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+    </s:HGroup>
+   </s:HGroup>
+	<s:HGroup horizontalCenter="0"
+			  bottom="0" visible="{!_exploreView}">
+		
+		
+    <s:Button label="Update"
+              click="spyWindowOkClickHandler(event)"
+              skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"
+              visible="{!isNewVerify}"
+              horizontalCenter="0"
+              bottom="0"/>
+  </s:HGroup>
+	
+	<s:Button label="Hide Component Selection"
+			  skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"
+			  click="hideClickHandler(event)"
+			  visible="{_exploreView}"
+			  horizontalCenter="0"
+			  bottom="0"/>
+
+</s:Group>

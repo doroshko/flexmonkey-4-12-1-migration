@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    title="Error Opening Project">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+            import com.gorillalogic.flexmonkey.events.ProjectFilesEvent;
+            import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+            import com.gorillalogic.framework.FMHub;
+
+            [Bindable] public var message:String;
+
+            protected function configureNewProject(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.NEW_PROJECT));
+                closePopup();
+            }
+
+            protected function openExistingProject(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.OPEN_PROJECT));
+                closePopup();
+            }
+
+            protected function closeFlexMonkey(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.CLOSE_APPLICATION));
+                closePopup();
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:Group left="20"
+             right="20"
+             bottom="10"
+             top="20">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label text="An existing project configuration failed to open for the following reason: "
+                 fontSize="14"
+                 textAlign="center"
+                 width="600"/>
+
+        <s:Label text="{message}"
+                 fontSize="18"
+                 textAlign="center"
+                 width="500"
+                 maxDisplayedLines="-1"
+                 fontWeight="bold"
+                 color="#ff0c0c"/>
+
+        <s:Label text="How would you like to proceed?"
+                 fontSize="14"
+                 textAlign="center"
+                 width="600"/>
+
+        <s:HGroup horizontalCenter="0">
+            <s:Button label="Configure a new project"
+                      click="configureNewProject(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+            <s:Button label="Open an existing project"
+                      click="openExistingProject(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+            <s:Button label="Close FlexMonkey"
+                      click="closeFlexMonkey(event)"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin"/>
+        </s:HGroup>
+
+    </s:Group>
+
+</containers:FMPopup>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         top="0"
+         bottom="0"
+         left="0"
+         right="0"
+         initialize="initializeHandler()"
+         dragEnter="dragEnterHandler(event)"
+         dragDrop="dragDropHandler(event)"
+         dragOver="dragOverHandler(event)">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+            import com.gorillalogic.flexmonkey.events.MonkeyNodeEvent;
+            import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+            import com.gorillalogic.flexmonkey.views.renderers.TestMonkeyNodeItemRenderer;
+            import com.gorillalogic.framework.FMHub;
+
+            import mx.collections.ArrayCollection;
+            import mx.events.DragEvent;
+            import mx.managers.DragManager;
+
+            import spark.events.RendererExistenceEvent;
+            import spark.layouts.supportClasses.DropLocation;
+
+            [Bindable] private var model:ProjectTestModel;
+            public var suiteItemRenderers:ArrayCollection = new ArrayCollection();
+
+            private function initializeHandler():void {
+                model = ProjectTestModel.instance;
+            }
+
+            private function suiteListRendererAddHandler(event:RendererExistenceEvent):void {
+                suiteItemRenderers.addItemAt(event.renderer, event.index);
+            }
+
+            private function dragEnterHandler(event:DragEvent):void {
+                if (model.suites == null || model.suites.length == 0) {
+                    DragManager.acceptDragDrop(this);
+                }
+            }
+
+            private function dragDropHandler(event:DragEvent):void {
+                FMHub.instance.dispatchEvent(MonkeyNodeEvent.createNewNodeEvent(MonkeyNodeEvent.NEW_TEST_SUITE, 0));
+            }
+
+            protected function dragOverHandler(event:DragEvent):void {
+                var dragPos:DropLocation = event.currentTarget.layout.calculateDropLocation(event);
+                var pageHeight:int = suiteList.height;
+                var totalHeight:int = listScroller.verticalScrollBar.maximum;
+                var curScrollPos:int = listScroller.verticalScrollBar.value;
+
+                var thresholdOffset:int = 12;
+                var threshold:int = pageHeight / thresholdOffset;
+
+                if (dragPos.dropPoint.y > (threshold * thresholdOffset)) { // bottom
+                    listScroller.verticalScrollBar.value = curScrollPos + threshold;
+                }
+
+                if (dragPos.dropPoint.y < threshold) { // top
+                    listScroller.verticalScrollBar.value = curScrollPos - threshold;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Scroller id="listScroller"
+                width="615"
+                height="755"
+                horizontalScrollPolicy="off"
+                top="0"
+                right="0">
+        <s:DataGroup id="suiteList"
+                     dataProvider="{model.suites}"
+                     itemRenderer="com.gorillalogic.flexmonkey.views.renderers.TestMonkeyNodeItemRenderer"
+                     top="0"
+                     right="2"
+                     bottom="0"
+                     left="0"
+                     contentBackgroundAlpha="0"
+                     rendererAdd="suiteListRendererAddHandler(event)">
+
+            <s:layout>
+                <s:VerticalLayout gap="8"
+                                  paddingTop="3"
+                                  paddingBottom="8"/>
+            </s:layout>
+        </s:DataGroup>
+    </s:Scroller>
+
+</s:Group>

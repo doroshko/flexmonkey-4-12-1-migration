@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:FMPopup xmlns:mx="library://ns.adobe.com/flex/mx"
+                    xmlns:fx="http://ns.adobe.com/mxml/2009"
+                    xmlns:s="library://ns.adobe.com/flex/spark"
+                    xmlns:containers="com.gorillalogic.flexmonkey.views.containers.*"
+                    xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+                    skinClass="com.gorillalogic.flexmonkey.views.skins.FMPopupSkin"
+                    creationComplete="create(event)"
+                    title="Edit Verify Grid"
+                    title.newMonkeyRunnable="Select Component for Verification"
+                    titleImageSource="{ Assets.verifyGridImageClass }"
+                    monkeyRunnable="{this.verifyGridMonkeyCommand}">
+
+    <containers:states>
+        <s:State name="base"/>
+        <s:State name="newMonkeyRunnable"/>
+    </containers:states>
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+            import com.gorillalogic.flexmonkey.model.ApplicationModel;
+            import com.gorillalogic.flexmonkey.monkeyCommands.StoreValueMonkeyCommand;
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyGridMonkeyCommand;
+            import com.gorillalogic.flexmonkey.utils.Assets;
+            import com.gorillalogic.utils.FMMessageConstants;
+            import com.gorillalogic.framework.FMHub;
+            import com.gorillalogic.utils.StoredValueLookup;
+
+            import mx.events.FlexEvent;
+            import mx.events.PropertyChangeEvent;
+
+            import org.as3commons.lang.StringUtils;
+
+            import spark.events.IndexChangeEvent;
+
+            [Bindable] private var enteredValue:String;
+            [Bindable] private var storedValueLookup:StoredValueLookup;
+            private var _verifyCommand:VerifyGridMonkeyCommand;
+
+            [Bindable] public function get verifyGridMonkeyCommand():VerifyGridMonkeyCommand {
+                return _verifyCommand;
+            }
+
+            public function set verifyGridMonkeyCommand(value:VerifyGridMonkeyCommand):void {
+                _verifyCommand = value;
+
+                //update expected value
+                if (StringUtils.startsWith(_verifyCommand.expectedValue, StoredValueLookup.KEY_PREFIX)) {
+                    storedKeyValueList.selectedIndex = StoredValueLookup.instance.getCommandPos(_verifyCommand.expectedValue);
+                } else {
+                    enteredValue = _verifyCommand.expectedValue;
+                }
+
+                // set updated state
+                if (_verifyCommand != null) {
+                    _verifyCommand.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, verifyUpdated);
+                }
+            }
+
+            protected function verifyUpdated(event:Event):void {
+                if (_verifyCommand.parent != null) {
+                    ApplicationModel.instance.isMonkeyTestFileDirty = true;
+                }
+            }
+
+            private function rowChangeHandler():void {
+                //no bi-directional binding for string to int
+                verifyGridMonkeyCommand.row = parseInt(verifyGridRowFormItem.text);
+            }
+
+            private function colChangeHandler():void {
+                //no bi-directional binding for string to int
+                verifyGridMonkeyCommand.col = parseInt(verifyGridColFormItem.text);
+            }
+
+            protected function clickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.CANCEL_COMPONENT_SELECTION));
+                closePopup();
+            }
+
+            protected function create(event:FlexEvent):void {
+                storedValueLookup = StoredValueLookup.instance;
+            }
+
+            protected function verifyKeyChanged(event:IndexChangeEvent):void {
+                if (event.currentTarget.selectedIndex >= 0) {
+                    _verifyCommand.expectedValue = StoredValueLookup.KEY_PREFIX + (event.currentTarget.selectedItem as StoreValueMonkeyCommand).keyName;
+                }
+            }
+
+            protected function verifyPropertyValueInputChangeHandler(event:Event):void {
+                if (enteredValue != null && enteredValue.length > 0) {
+                    _verifyCommand.expectedValue = enteredValue;
+                    storedKeyValueList.selectedIndex = -1;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:Group width="435"
+             maxHeight="575"
+             maxWidth="650"
+             bottom="0"
+             left="0"
+             right="0"
+             top="0"
+             includeIn="base">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"/>
+        </s:layout>
+
+        <mx:Form id="verifyGridForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+            <mx:FormItem width="100%"
+                         label="Description"
+                         labelWidth="125">
+                <mx:TextInput id="verifyGridDescriptionFormItem"
+                              width="100%"
+                              text="@{ verifyGridMonkeyCommand.description }"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Target Value"
+                         labelWidth="125">
+                <mx:TextInput id="verifyGridValueFormItem"
+                              width="100%"
+                              text="@{ verifyGridMonkeyCommand.value }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Target Property"
+                         labelWidth="125">
+                <mx:TextInput id="verifyGridPropFormItem"
+                              width="100%"
+                              text="@{ verifyGridMonkeyCommand.prop }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Container Value"
+                         labelWidth="125">
+                <mx:TextInput id="verifyGridContainerValueFormItem"
+                              width="100%"
+                              text="@{ verifyGridMonkeyCommand.containerValue }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Container Property"
+                         labelWidth="125">
+                <mx:TextInput id="verifyGridContainerPropFormItem"
+                              width="100%"
+                              text="@{ verifyGridMonkeyCommand.containerProp }"/>
+            </mx:FormItem>
+
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form id="verifyGridForm2"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+
+            <mx:FormItem width="100%"
+                         label="Grid Row"
+                         labelWidth="125">
+                <mx:TextInput id="verifyGridRowFormItem"
+                              width="100%"
+                              text="{ verifyGridMonkeyCommand.row }"
+                              change="rowChangeHandler()"
+                              restrict="0-9"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Grid Column"
+                         labelWidth="125">
+                <mx:TextInput id="verifyGridColFormItem"
+                              width="100%"
+                              text="{ verifyGridMonkeyCommand.col }"
+                              change="colChangeHandler()"
+                              restrict="0-9"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="Expected: Enter Value"
+                         labelWidth="125">
+                <mx:TextInput id="verifyPropertyValueInput"
+                              width="100%"
+                              text="@{ enteredValue }"
+                              change="verifyPropertyValueInputChangeHandler(event)"/>
+            </mx:FormItem>
+
+            <mx:FormItem width="100%"
+                         label="- OR -"
+                         labelWidth="125"/>
+
+            <mx:FormItem width="100%"
+                         label="Expected: Stored Key Value"
+                         labelWidth="125">
+                <s:DropDownList id="storedKeyValueList"
+                                width="100%"
+                                dataProvider="{ storedValueLookup.storeValueCmds }"
+                                enabled="{ verifyPropertyValueInput.text == null || verifyPropertyValueInput.text.length == 0  &amp;&amp; storedValueLookup.storeValueCmds.length > 0 }"
+                                labelField="keyName"
+                                change="verifyKeyChanged(event)"
+                                prompt="Select Expected 'Key Value' or 'Enter Value'"/>
+            </mx:FormItem>
+        </mx:Form>
+
+        <mx:HRule width="100%"/>
+
+        <mx:Form id="retryForm"
+                 width="100%"
+                 paddingBottom="0"
+                 paddingLeft="10"
+                 paddingRight="0"
+                 paddingTop="0"
+                 verticalGap="5">
+            <mx:FormItem width="100%"
+                         label="Retry Delay"
+                         labelWidth="125">
+                <mx:TextInput id="verifyDelayFormItem"
+                              width="100%"
+                              text="@{ verifyGridMonkeyCommand.delay }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Retry Attempts"
+                         labelWidth="125">
+                <mx:TextInput id="verifyAttemptsFormItem"
+                              width="100%"
+                              text="@{ verifyGridMonkeyCommand.attempts }"/>
+            </mx:FormItem>
+            <mx:FormItem width="100%"
+                         label="Total Retry Timeout"
+                         labelWidth="125">
+                <mx:TextInput id="verifyTimeoutFormItem"
+                              width="100%"
+                              text="{ verifyGridMonkeyCommand.timeOut }"
+                              enabled="false"
+                              editable="false"/>
+            </mx:FormItem>
+        </mx:Form>
+    </s:Group>
+
+    <s:Group maxHeight="650"
+             maxWidth="800"
+             bottom="20"
+             left="20"
+             right="20"
+             top="20"
+             includeIn="newMonkeyRunnable">
+
+        <s:layout>
+            <s:VerticalLayout horizontalAlign="center"
+                              gap="20"/>
+        </s:layout>
+
+        <s:Label width="400"
+                 text="{ FMMessageConstants.VERIFY_GRID_COMPONENT_SELECTION }"
+                 fontSize="18"
+                 fontWeight="bold"
+                 textAlign="center"
+                 maxDisplayedLines="-1"/>
+        <s:Button label="Cancel"
+                  click="clickHandler(event)"/>
+    </s:Group>
+
+</containers:FMPopup>

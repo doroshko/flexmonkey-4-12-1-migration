@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009"
+             xmlns:s="library://ns.adobe.com/flex/spark"
+             alpha.disableds="0.5">
+
+    <fx:Metadata>
+		[HostComponent("com.gorillalogic.flexmonkey.views.components.PlayPauseButton")]
+	</fx:Metadata>
+
+    <s:states>
+        <s:State name="up"
+                 stateGroups="ups,playing"/>
+        <s:State name="over"
+                 stateGroups="overs,playing"/>
+        <s:State name="down"
+                 stateGroups="downs,playing"/>
+        <s:State name="disabled"
+                 stateGroups="disableds,playing"/>
+        <s:State name="upAndPaused"
+                 stateGroups="ups,paused"/>
+        <s:State name="overAndPaused"
+                 stateGroups="overs,paused"/>
+        <s:State name="downAndPaused"
+                 stateGroups="downs,paused"/>
+        <s:State name="disabledAndPaused"
+                 stateGroups="disableds,paused"/>
+    </s:states>
+
+    <!-- button -->
+    <s:Ellipse left="0"
+               right="0"
+               top="0"
+               bottom="0">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry color="#ffffff"
+                                 color.downs="#eeeeee"
+                                 ratio="0"/>
+                <s:GradientEntry id="bottomColor"
+                                 color="#e1e1e1"
+                                 color.overAndPaused="#f2f2f2"
+                                 color.up="#ffaa99"
+                                 color.over="#ffccbb"
+                                 color.down="#ffccbb"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+        <s:stroke>
+            <s:SolidColorStroke id="strokeColor"
+                                color="#bbbbbb"
+                                color.overs="#d0d0d0"
+                                color.downs="#d0d0d0"/>
+        </s:stroke>
+        <s:filters>
+            <s:GlowFilter id="glow"
+                          color="#888888"
+                          blurX="8"
+                          blurY="8"
+                          alpha="0"
+                          alpha.overs="0.5"
+                          alpha.downs="0.5"/>
+        </s:filters>
+    </s:Ellipse>
+
+    <!-- play -->
+    <s:Path x="{hostComponent.width*.35}"
+            y="{hostComponent.height*.275}"
+            includeIn="paused">
+        <s:data>M 8,4.5 L 0,0 0,9 Z</s:data>
+        <s:fill>
+            <s:SolidColor color="#555555"
+                          color.overAndPaused="#000000"
+                          color.downAndPaused="#000000"/>
+        </s:fill>
+    </s:Path>
+
+    <!-- pause -->
+    <s:Path x="{hostComponent.width*.3}"
+            y="{hostComponent.height*.3}"
+            includeIn="playing">
+        <s:data>M 0,0 L 3,0 3,8 0,8 Z M 5,0 L 8,0 8,8 5,8 Z</s:data>
+        <s:fill>
+            <s:SolidColor color="#555555"
+                          color.over="#000000"
+                          color.down="#000000"/>
+        </s:fill>
+    </s:Path>
+
+    <!-- shine -->
+    <s:Ellipse x="{hostComponent.width*.125}"
+               y="{hostComponent.height*.075}"
+               width="{hostComponent.width*.75}"
+               height="{hostComponent.height*.55}">
+        <s:fill>
+            <s:LinearGradient rotation="90">
+                <s:GradientEntry color="#ffffff"
+                                 alpha="0.8"
+                                 ratio="0"/>
+                <s:GradientEntry color="#ffffff"
+                                 alpha="0"
+                                 ratio="1"/>
+            </s:LinearGradient>
+        </s:fill>
+    </s:Ellipse>
+</s:SparkSkin>

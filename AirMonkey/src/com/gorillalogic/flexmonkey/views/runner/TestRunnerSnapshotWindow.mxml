@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<components:Window xmlns:fx="http://ns.adobe.com/mxml/2009"
+                   xmlns:s="library://ns.adobe.com/flex/spark"
+                   xmlns:mx="library://ns.adobe.com/flex/mx"
+                   xmlns:components="spark.components.*"
+                   xmlns:runner="com.gorillalogic.flexmonkey.views.runner.*"
+                   minHeight="350"
+                   minWidth="350"
+                   creationComplete="create(event)"
+                   title="FlexMonkey :: Snapshot Detail"
+                   skinClass="com.gorillalogic.flexmonkey.views.skins.WindowSkin">
+
+    <fx:Script>
+        <![CDATA[
+            import com.gorillalogic.flexmonkey.monkeyCommands.VerifyMonkeyCommand;
+            import com.gorillalogic.flexmonkey.views.skins.WindowSkin;
+
+            import mx.events.FlexEvent;
+
+            [Bindable] public var monkeyRunnable:VerifyMonkeyCommand;
+
+            protected function create(event:FlexEvent):void {
+                this.width = monkeyRunnable.expectedSnapshot.width + 100;
+                this.height = monkeyRunnable.expectedSnapshot.height + 105;
+            }
+        ]]>
+    </fx:Script>
+
+    <runner:TestRunnerSnapshotDetail id="snapshotGroup"
+                                     monkeyRunnable="{monkeyRunnable}"
+                                     top="0"
+                                     bottom="6"
+                                     height="{this.width-20}"
+                                     isSmall="false"
+                                     buttonFontSize="14"
+                                     topBottomPadding="25"
+                                     buttonPadding="10"
+                                     width="100%"/>
+
+</components:Window>

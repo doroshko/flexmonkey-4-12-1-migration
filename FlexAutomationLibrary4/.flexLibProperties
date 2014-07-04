@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
+  <includeClasses>
+    <classEntry path="spark.automation.delegates.components.SparkComboBoxAutomationImpl"/>
+    <classEntry path="spark.automation.delegates.components.supportClasses.SparkScrollBarBaseAutomationImpl"/>
+    <classEntry path="mx.automation.delegates.controls.MenuAutomationImpl"/>
+    <classEntry path="spark.automation.delegates.components.SparkScrollerAutomationImpl"/>
+    <classEntry path="mx.automation.delegates.controls.TitleWindowAutomationImpl"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

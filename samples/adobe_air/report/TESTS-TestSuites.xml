@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+  <testsuite errors="0" failures="0" hostname="private" id="0" name="MyTest" package="com.gorillalogic.tests.newTestSuite.testCases.tests" skipped="0" tests="8" time="4.876" timestamp="2011-02-22T17:57:40">
+      <testcase classname="com.gorillalogic.tests.newTestSuite.testCases.tests::MyTest" name="myTest1" time="0.782" />
+
+      <testcase classname="com.gorillalogic.tests.newTestSuite.testCases.tests::MyTest" name="myTest2" time="0.619" />
+
+      <testcase classname="com.gorillalogic.tests.newTestSuite.testCases.tests::MyTest" name="myTest3" time="0.540" />
+
+      <testcase classname="com.gorillalogic.tests.newTestSuite.testCases.tests::MyTest" name="myTest4" time="0.687" />
+
+      <testcase classname="com.gorillalogic.tests.newTestSuite.testCases.tests::MyTest" name="myTest5" time="0.541" />
+
+      <testcase classname="com.gorillalogic.tests.newTestSuite.testCases.tests::MyTest" name="myTest6" time="0.541" />
+
+      <testcase classname="com.gorillalogic.tests.newTestSuite.testCases.tests::MyTest" name="myTest7" time="0.624" />
+
+      <testcase classname="com.gorillalogic.tests.newTestSuite.testCases.tests::MyTest" name="myTest8" time="0.542" />
+
+  </testsuite>
+</testsuites>

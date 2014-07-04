@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     FlexMonkey 1.0, Copyright 2008, 2009, 2010 by Gorilla Logic, Inc.
+     FlexMonkey 1.0 is distributed under the GNU General Public License, v2.
+-->
+<s:SkinnableContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                      xmlns:s="library://ns.adobe.com/flex/spark"
+                      xmlns:mx="library://ns.adobe.com/flex/mx"
+                      xmlns:components="com.gorillalogic.flexmonkey.views.components.*"
+                      skinClass="com.gorillalogic.flexmonkey.views.skins.MenuPaletteSkin"
+                      initialize="initializeHandler()"
+                      xmlns:views="com.gorillalogic.flexmonkey.application.UI.views.*"
+                      xmlns:views1="com.gorillalogic.flexmonkey.views.*">
+
+    <s:states>
+        <s:State name="base"/>
+        <s:State name="connected"/>
+    </s:states>
+
+    <fx:Script>
+        <![CDATA[
+			import com.gorillalogic.flexmonkey.core.MonkeyRunnable;
+			import com.gorillalogic.flexmonkey.events.ApplicationEvent;
+			import com.gorillalogic.flexmonkey.events.FMRunnerEvent;
+			import com.gorillalogic.flexmonkey.events.InteractionEvent;
+			import com.gorillalogic.flexmonkey.events.MonkeyRunnableEvent;
+			import com.gorillalogic.flexmonkey.model.ApplicationModel;
+			import com.gorillalogic.flexmonkey.model.ProjectTestModel;
+			import com.gorillalogic.flexmonkey.monkeyCommands.*;
+			import com.gorillalogic.flexmonkey.views.skins.CaseIconSkin;
+			import com.gorillalogic.flexmonkey.views.skins.GreyTinyButtonSkin;
+			import com.gorillalogic.flexmonkey.views.skins.MenuPaletteSkin;
+			import com.gorillalogic.flexmonkey.views.skins.PauseIconSkin;
+			import com.gorillalogic.flexmonkey.views.skins.SuiteIconSkin;
+			import com.gorillalogic.flexmonkey.views.skins.TestIconSkin;
+			import com.gorillalogic.flexmonkey.views.skins.VerifyGridIconSkin;
+			import com.gorillalogic.flexmonkey.views.skins.VerifyIconSkin;
+			import com.gorillalogic.flexmonkey.views.skins.VerifyPropIconSkin;
+			import com.gorillalogic.flexunit.FlexMonkeyConnectionRunner;
+			import com.gorillalogic.framework.FMHub;
+			import com.gorillalogic.utils.DragRequest;
+			
+			import mx.binding.utils.ChangeWatcher;
+			import mx.core.DragSource;
+			import mx.core.UIComponent;
+			import mx.events.DragEvent;
+			import mx.managers.DragManager;
+
+            [Bindable] private var model:ProjectTestModel;
+            [Bindable] private var applicationModel:ApplicationModel;
+
+            [Bindable] private var suiteDragSource:DragSource;
+            [Bindable] private var caseDragSource:DragSource;
+            [Bindable] private var testDragSource:DragSource;
+
+            [Bindable] private var pauseDragSource:DragSource;
+            [Bindable] private var verifyDragSource:DragSource;
+            [Bindable] private var verifyGridDragSource:DragSource;
+            [Bindable] private var verifyPropDragSource:DragSource;
+            [Bindable] private var setPropertyDragSource:DragSource;
+            [Bindable] private var storeValueDragSource:DragSource;
+            [Bindable] private var functionDragSource:DragSource;
+
+            private function initializeHandler():void {
+                //setup test model
+                model = ProjectTestModel.instance;
+                applicationModel = ApplicationModel.instance;
+                ChangeWatcher.watch(applicationModel, "isConnected", connectedHandler);
+
+                //set up drag sources
+                suiteDragSource = new DragSource();
+                suiteDragSource.addData(DragRequest.NEW_SUITE, DragRequest.TYPE);
+
+                caseDragSource = new DragSource();
+                caseDragSource.addData(DragRequest.NEW_CASE, DragRequest.TYPE);
+
+                testDragSource = new DragSource();
+                testDragSource.addData(DragRequest.NEW_TEST, DragRequest.TYPE);
+
+                pauseDragSource = new DragSource();
+                pauseDragSource.addData(DragRequest.NEW_PAUSE, DragRequest.TYPE);
+
+                verifyDragSource = new DragSource();
+                verifyDragSource.addData(DragRequest.NEW_VERIFY, DragRequest.TYPE);
+
+                verifyGridDragSource = new DragSource();
+                verifyGridDragSource.addData(DragRequest.NEW_VERIFY_GRID, DragRequest.TYPE);
+
+                verifyPropDragSource = new DragSource();
+                verifyPropDragSource.addData(DragRequest.NEW_VERIFY_PROP, DragRequest.TYPE);
+
+                setPropertyDragSource = new DragSource();
+                setPropertyDragSource.addData(DragRequest.NEW_SET_PROPERTY_CMD, DragRequest.TYPE);
+
+                storeValueDragSource = new DragSource();
+                storeValueDragSource.addData(DragRequest.NEW_STORE_VALUE_CMD, DragRequest.TYPE);
+
+                functionDragSource = new DragSource();
+                functionDragSource.addData(DragRequest.NEW_FUNCTION_CMD, DragRequest.TYPE);
+            }
+
+            private function connectedHandler(event:Event):void {
+                if (ApplicationModel.instance.isConnected) {
+                    this.currentState = "connected";
+                } else {
+                    this.currentState = "base";
+                }
+            }
+
+            private function playButtonHandler(event:MouseEvent):void {
+				FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.SETUP_TEST_RUNNER));
+            }
+
+            protected function collapseClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new InteractionEvent(InteractionEvent.COLLAPSE));
+            }
+
+            protected function expandClickHandler(event:MouseEvent):void {
+                FMHub.instance.dispatchEvent(new InteractionEvent(InteractionEvent.EXPAND));
+            }
+
+            protected function verticalClickHandler(event:MouseEvent):void {
+                ApplicationModel.instance.isVerticalLayout = true;
+                FMHub.instance.dispatchEvent(new InteractionEvent(InteractionEvent.VERTICAL_LAYOUT));
+            }
+
+            protected function tileClickHandler(event:MouseEvent):void {
+                ApplicationModel.instance.isVerticalLayout = false;
+                FMHub.instance.dispatchEvent(new InteractionEvent(InteractionEvent.TILE_LAYOUT));
+            }
+
+            protected function playDragEnterHandler(event:DragEvent):void {
+                if (DragRequest.isPlayable(event)) {
+                    DragManager.acceptDragDrop(event.currentTarget as UIComponent);
+                }
+            }
+			// view current application automation tree data
+			private function projectViewCurrentApplicationAutomationTreeSelectHandler(event:Event):void {
+				FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.OPEN_APPLICATION_AUTOMATION_TREE_VIEW));
+			}
+			
+			private function exploreAutomationChildrenCurrentApplication(event:Event):void{
+				FMHub.instance.dispatchEvent(new MonkeyRunnableEvent(MonkeyRunnableEvent.EXPLORE_APP));
+			}
+            protected function playDragDropHandler(event:DragEvent):void {
+                if (DragRequest.isPlayable(event)) {
+                    var dragData:MonkeyRunnable = event.dragSource.dataForFormat(DragRequest.DATA) as MonkeyRunnable;
+					FMHub.instance.dispatchEvent(new FMRunnerEvent(FMRunnerEvent.SETUP_TEST_RUNNER, dragData));
+                }
+            }
+        ]]>
+    </fx:Script>
+
+
+    <s:Group id="mainNav"
+             top="5"
+             right="0"
+             left="0">
+
+        <!-- expand and collapse nav -->
+        <s:Line right="0"
+                left="0"
+                top="0">
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Label text="View"
+                 top="8"
+                 left="10"
+                 right="56"
+                 textAlign="center"
+                 fontSize="10"
+                 maxDisplayedLines="1"/>
+
+        <s:Button skinClass="com.gorillalogic.flexmonkey.views.skins.ExpandButtonSkin"
+                  click="expandClickHandler(event)"
+                  top="22"
+                  left="17" toolTip="Expand All"/>
+
+        <s:Button skinClass="com.gorillalogic.flexmonkey.views.skins.CollapseButtonSkin"
+                  click="collapseClickHandler(event)"
+                  top="22"
+                  left="47" toolTip="Collapse All"/>
+		<s:Button skinClass="com.gorillalogic.flexmonkey.views.skins.ListButtonSkin"
+				  label="Vertical"
+				  toolTip="List View"
+				  click="verticalClickHandler(event)"
+				  top="47"
+				  width="20"
+				  left="17"/>
+		<s:Button skinClass="com.gorillalogic.flexmonkey.views.skins.TileButtonSkin"
+				  label="Tile"
+				  toolTip="Tile View"
+				  click="tileClickHandler(event)"
+				  top="47"
+				  width="20"
+				  left="47"/>
+
+        <!-- layout nav -->
+        <s:Line left="0"
+                right="45"
+                top="87">
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Label text="Explore"
+                 top="95"
+                 left="0"
+                 right="47"
+                 textAlign="center"
+                 fontSize="10"/>
+		<s:Button skinClass="com.gorillalogic.flexmonkey.views.skins.TreeIconSkin"
+				  label="Show Automation Tree"
+				  top="109"
+				  width="20"
+				  toolTip="Show Automation Tree"
+				  click="projectViewCurrentApplicationAutomationTreeSelectHandler(event);"
+				  left="17"/>
+		
+		<s:Button skinClass="com.gorillalogic.flexmonkey.views.skins.MagnifierIconSkin"
+				  label="Explore Automation Children"
+				  toolTip="Explore Automation Children"
+				  top="109"
+				  click="exploreAutomationChildrenCurrentApplication(event);"
+				  width="20"
+				  left="47"/>
+
+
+
+        <!-- summary nav box -->
+        <s:Line left="0"
+                right="45"
+                top="170">
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Label text="Summary"
+                 top="182"
+                 left="0"
+                 right="46"
+                 textAlign="center"
+                 fontSize="10"/>
+
+        <s:VGroup top="206"
+                  width="70"
+                  left="8"
+                  horizontalAlign="left"
+                  gap="7">
+            <s:Label text="Suites:"
+                     fontSize="10"
+                     fontWeight="bold"/>
+            <s:Label text="Cases:"
+                     fontSize="10"
+                     fontWeight="bold"/>
+            <s:Label text="Tests:"
+                     fontSize="10"
+                     fontWeight="bold"/>
+            <s:Label text="Cmds:"
+                     fontSize="10"
+                     fontWeight="bold"/>
+        </s:VGroup>
+
+        <s:VGroup top="206"
+                  width="63"
+                  left="8"
+                  gap="7">
+            <s:Label text="{model.suiteCount}"
+                     width="100%"
+                     fontSize="10"
+                     fontStyle="italic"
+                     textAlign="right"
+                     paddingRight="0"/>
+            <s:Label text="{model.caseCount}"
+                     width="100%"
+                     fontSize="10"
+                     fontStyle="italic"
+                     textAlign="right"
+                     paddingRight="0"/>
+            <s:Label text="{model.testCount}"
+                     width="100%"
+                     fontSize="10"
+                     fontStyle="italic"
+                     textAlign="right"
+                     paddingRight="0"/>
+            <s:Label text="{model.commandCount}"
+                     width="100%"
+                     fontSize="10"
+                     fontStyle="italic"
+                     textAlign="right"
+                     paddingRight="0"/>
+        </s:VGroup>
+
+
+
+
+        <!-- drag and drop nav box -->
+        <s:Line right="45"
+                bottom="0"
+                top="0">
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Line>
+
+        <s:Label text="Drag"
+                 top="8"
+                 width="45"
+                 left="80"
+                 textAlign="center"
+                 fontSize="9"/>
+
+
+        <s:VGroup height="100%"
+                  width="45"
+                  right="0"
+                  top="22"
+                  bottom="7"
+                  horizontalAlign="center">
+
+            <components:DragComponent id="suiteIcon"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.SuiteIconSkin"
+                                      dragSource="{suiteDragSource}"
+                                      toolTip="New Test Suite"/>
+            <components:DragComponent id="caseIcon"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.CaseIconSkin"
+                                      dragSource="{caseDragSource}"
+                                      toolTip="New Test Case"/>
+            <components:DragComponent id="testIcon"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.TestIconSkin"
+                                      dragSource="{testDragSource}"
+                                      toolTip="New Test"/>
+
+
+            <components:DragComponent id="verifyIcon"
+                                      dragSource="{verifyDragSource}"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.VerifyIconSkin"
+                                      toolTip="New Verify Component Command"/>
+            <components:DragComponent id="verifyPropIcon"
+                                      dragSource="{verifyPropDragSource}"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.VerifyPropIconSkin"
+                                      toolTip="New Verify Expression Command"/>
+            <components:DragComponent id="verifyGridIcon"
+                                      dragSource="{verifyGridDragSource}"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.VerifyGridIconSkin"
+                                      toolTip="New Verify Grid Command"/>
+            <components:DragComponent id="storeValueCommand"
+                                      dragSource="{storeValueDragSource}"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.KeySkin"
+                                      toolTip="New Store Value Command"/>
+            <components:DragComponent id="setPropertyIcon"
+                                      dragSource="{setPropertyDragSource}"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.GearIconSkin"
+                                      toolTip="Set Property Command"/>
+            <components:DragComponent id="functionIcon"
+                                      dragSource="{functionDragSource}"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.FunctionSkin"
+                                      toolTip="Call Function Command"/>
+            <components:DragComponent id="pauseIcon"
+                                      dragSource="{pauseDragSource}"
+                                      skinClass="com.gorillalogic.flexmonkey.views.skins.PauseIconSkin"
+                                      toolTip="New Pause Command"/>
+        </s:VGroup>
+
+
+        <!-- bottom nav box -->
+        <s:Line right="0"
+                left="0"
+                bottom="0">
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Line>
+
+    </s:Group>
+
+
+    <!-- connection status box -->
+    <s:Group y="{mainNav.height+2}"
+             right="0"
+             left="0">
+
+        <views1:ConnectionStatus/>
+
+        <s:Line bottom="0"
+                left="0"
+                right="1">
+            <s:stroke>
+                <s:SolidColorStroke color="#999999"
+                                    weight="1"/>
+            </s:stroke>
+        </s:Line>
+    </s:Group>
+
+    <components:PlayPauseButton id="playButton"
+                                toolTip="Play"
+                                click="playButtonHandler(event)"
+                                dragEnter="playDragEnterHandler(event)"
+                                dragDrop="playDragDropHandler(event)"
+                                bottom="9"
+                                left="52"
+                                width="20"
+                                height="20"/>
+
+    <components:TrashCan id="trashCan"
+                         skinClass="com.gorillalogic.flexmonkey.views.skins.TrashCanSkin"
+                         bottom="9"
+                         left="14"/>
+
+</s:SkinnableContainer>
