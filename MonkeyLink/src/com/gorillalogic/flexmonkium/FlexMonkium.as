@@ -341,7 +341,7 @@ package com.gorillalogic.flexmonkium {
 	   }
 	   public function dumpcomponentTree():void{
 		   var ret:Array = MonkeyUtils.getApplicationTreeInfo() as Array;
-		   var dump:String = JSON.encode(ret[0]);
+		   var dump:String = com.gorillalogic.json.JSON.encode(ret[0]);
 		   var localConnectionSender:LocalConnection = new LocalConnection();
 		   localConnectionSender.addEventListener(StatusEvent.STATUS, statusHandler);
 		   
