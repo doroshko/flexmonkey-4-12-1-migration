@@ -64,7 +64,7 @@ package com.gorillalogic.flexmonkium {
 			}
 		}
 		
-		function statusHandler (event:StatusEvent):void
+		private function statusHandler (event:StatusEvent):void
 		{
 			switch (event.level)
 			{
@@ -76,6 +76,7 @@ package com.gorillalogic.flexmonkium {
 					break;
 			}
 		}
+		
 		///Stuff for MonkeyTalk
 		//public function playCommand(action:String, monkeyID:String, respNumber:Number, args:Array = null):void{
 		public function ping(respNumber:Number):void{
@@ -130,14 +131,14 @@ package com.gorillalogic.flexmonkium {
 					null,
 					monkeyID,
 					"automationName",
-					null,
+					false,
 					attributes,
 					null,
 					null,
+					false,
 					null,
 					null,
-					null,
-					null);
+					0);
 				    var val:String =  command.compareAttributesMT(command.loadTarget(false));
 
 					var localConnectionSender:LocalConnection = new LocalConnection();
@@ -168,14 +169,14 @@ package com.gorillalogic.flexmonkium {
 			   null,
 			   monkeyID,
 			   "automationName",
-			   null,
+			   false,
 			   attributes,
 			   null,
 			   null,
+			   false,
 			   null,
 			   null,
-			   null,
-			   null);
+			   0);
 		   var val:String =  command.compareAttributesMTRegEx(command.loadTarget(false));
 		   
 		   var localConnectionSender:LocalConnection = new LocalConnection();
@@ -205,14 +206,14 @@ package com.gorillalogic.flexmonkium {
 			   null,
 			   monkeyID,
 			   "automationName",
-			   null,
+			   false,
 			   attributes,
 			   null,
 			   null,
+			   false,
 			   null,
 			   null,
-			   null,
-			   null);
+			   0);
 		   var val:String =  command.compareAttributesMTRegEx(command.loadTarget(false));
 		   
 		   var localConnectionSender:LocalConnection = new LocalConnection();
@@ -243,14 +244,14 @@ package com.gorillalogic.flexmonkium {
 			   null,
 			   monkeyID,
 			   "automationName",
-			   null,
+			   false,
 			   attributes,
 			   null,
 			   null,
+			   false,
 			   null,
 			   null,
-			   null,
-			   null);
+			   0);
 		   var val:String =  command.compareAttributesMTRegEx(command.loadTarget(false));
 		   
 		   var localConnectionSender:LocalConnection = new LocalConnection();
@@ -281,14 +282,14 @@ package com.gorillalogic.flexmonkium {
 			   null,
 			   monkeyID,
 			   "automationName",
-			   null,
+			   false,
 			   attributes,
 			   null,
 			   null,
+			   false,
 			   null,
 			   null,
-			   null,
-			   null);
+			   0);
 		   var val:String =  command.compareAttributesMTRegEx(command.loadTarget(false));
 		   
 		   var localConnectionSender:LocalConnection = new LocalConnection();
@@ -304,7 +305,19 @@ package com.gorillalogic.flexmonkium {
 	   }
 	    public function verifyGridFromMonkeyTalk(respNumber:Number, monkeyID:String, row:int, col:int, expectedValue:String):void {
 	
-			   var command2:VerifyGridMonkeyCommand = new VerifyGridMonkeyCommand(null, monkeyID, "automationName", row, col, expectedValue, null, null, null, null, null);
+			   var command2:VerifyGridMonkeyCommand = new VerifyGridMonkeyCommand(
+				   null, 
+				   monkeyID, 
+				   "automationName", 
+				   row, 
+				   col, 
+				   expectedValue, 
+				   null, 
+				   null, 
+				   false, 
+				   null, 
+				   null
+			   );
 			  
 			   var actualValue:String = command2.getCellValue();
 			   var localConnectionSender:LocalConnection = new LocalConnection();

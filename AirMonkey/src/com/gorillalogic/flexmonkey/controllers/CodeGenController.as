@@ -43,9 +43,12 @@ package com.gorillalogic.flexmonkey.controllers {
 			hub.listen(ProjectFilesEvent.GENERATE_JS_TESTS, saveTestFilesAsJS, this);
         }
         private function saveTestFilesAsJS(event:Event):void{
-			FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert,
-				"JavaScript Code Generation Finshed!",
-				"JavaScript tests saved MonkeyTests.js"));
+			FMHub.instance.dispatchEvent(new FMAlertEvent(
+				FMAlertEvent.Alert,
+				"JavaScript Code Generation Finshed!" + "JavaScript tests saved MonkeyTests.js.",
+				false,
+				false
+			));
 		}
         private function saveTestFilesAsAS3(event:Event):void {
             var as3Files:AS3FileCollector = new AS3FileCollector(model.generatedCodeSuitesPackageName);

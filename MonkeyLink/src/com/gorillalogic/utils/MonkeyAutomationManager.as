@@ -58,7 +58,8 @@ package com.gorillalogic.utils {
 					isFlex4 = true;
 					_automationManager = Automation["automationManager2"];
 					if(FlexGlobals.topLevelApplication){
-						var app2:mx.core.Application = mx.core.Application.application as mx.core.Application;
+						//var app2:mx.core.Application = mx.core.Application.application as mx.core.Application;
+						var app2:Application = FlexGlobals.topLevelApplication as Application; 
 						if(app2){
 							var appAsComp:UIComponent = app2 as UIComponent;
 							for each (var comp:UIComponent in getAllElementsFromAComponent(appAsComp)){
@@ -70,8 +71,7 @@ package com.gorillalogic.utils {
 									}
 									
 								}
-								
-								
+					
 							} 	
 						}
 					}

@@ -425,11 +425,11 @@
             private function editNewMonkeyRunnderHandler(event:MonkeyRunnableEvent):void {
                 loadMonkeyRunnableForm(event.monkeyRunnable, "newMonkeyRunnable");
             }
-            private function exploreChildrenPopupHandler(event:MonkeyRunnableEvent){
+            private function exploreChildrenPopupHandler(event:MonkeyRunnableEvent):void {
 				exploreChildrenForm.openPopup("newMonkeyRunnable");
 				
 			}
-			private function exploreChildrenPopupHandlerPropview(event:MonkeyRunnableEvent){
+			private function exploreChildrenPopupHandlerPropview(event:MonkeyRunnableEvent):void {
 		
 				this.nativeWindow.alwaysInFront = true;
 				this.nativeWindow.alwaysInFront = false;

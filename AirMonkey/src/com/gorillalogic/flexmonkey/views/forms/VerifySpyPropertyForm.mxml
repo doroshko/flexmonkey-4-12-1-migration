@@ -36,8 +36,8 @@
 
             [Bindable] public var isNewVerify:Boolean = true;
             [Bindable] public var propertyCollection:ArrayCollection;
-			[Bindable] private var _showCheckBoxes = true;
-			[Bindable] private var _exploreView = false;
+			[Bindable] private var _showCheckBoxes:Boolean = true;
+			[Bindable] private var _exploreView:Boolean = false;
             private var _verify:VerifyMonkeyCommand;
 
             private var target:Object;
