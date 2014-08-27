@@ -1,76 +1,71 @@
 <project name="adobe_air" basedir="." default="run_tests">
 
-	<property name="DEBUG" value="true"/>	
-
-        <property file="build.properties"/> 
-        <fail unless="flex.home" message="flex.home should be set (in build.properties file)"/>
-        <property name="FLEX_HOME" value="${flex.home}"/> 
-
-	<!-- set path to Flashplayer logfile -->
-	<condition property="FLASHPLAYER_LOG_DIR" value="${user.home}\Application Data\Macromedia\Flash Player\Logs">  
-   		<os family="windows"/>
-	</condition>
-	<condition property="FLASHPLAYER_LOG_DIR" value="${user.home}/Library/Preferences/Macromedia/Flash Player/Logs">  		<os family="mac"/>
-	</condition>
-	<condition property="FLASHPLAYER_LOG_DIR" value="${user.home}/.macromedia/Flash_Player/Logs">  
-   		<os family="unix"/>
-	</condition>
-	<property name="FLASHPLAYER_LOG_FILE" value="${FLASHPLAYER_LOG_DIR}/flashlog.txt"/> 
-
-	<property name="MXMLC.JAR" value="${FLEX_HOME}/lib/mxmlc.jar"/>
-	<property name="ADT.JAR" value="${AIR_SDK_HOME}/lib/adt.jar"/>
-
-	<property name="APP_NAME" value="adobe_air"/>
-	<property name="SNAPSHOT_DIR" value="./tests/snapshots"/>
-	<property name="SRC_ROOT" value="./src"/>
-	<property name="TEST_SRC_ROOT" value="./tests/src"/>
-	<property name="LIB_ROOT" value="./libs"/>
-	
-	<property name="AUTO_LIB_ROOT" value="${FLEX_HOME}/frameworks/libs"/>
-	<property name="MAIN_SOURCE_FILE" value="${SRC_ROOT}/${APP_NAME}.mxml"/>
-	<property name="APP_DESCRIPTOR" value="${SRC_ROOT}/${APP_NAME}-app.xml"/>
+    <property name="DEBUG" value="true"/>	
+    <property file="build.properties"/> 
+    <fail unless="flex.home" message="flex.home should be set (in build.properties file)"/>
+ 
+<!-- build variables --> 
+    <property name="FLEX_HOME" value="${flex.home}"/> 
+    <property name="MXMLC.JAR" value="${FLEX_HOME}/lib/mxmlc.jar"/>
+    <property name="ADT.JAR" value="${AIR_SDK_HOME}/lib/adt.jar"/>
+    <property name="APP_NAME" value="adobe_air"/>
+    <property name="SNAPSHOT_DIR" value="./tests/src/snapshots"/>
+    <property name="SRC_ROOT" value="./src"/>
+    <property name="TEST_SRC_ROOT" value="./tests/src"/>
+    <property name="LIB_ROOT" value="./../../libs"/>
+    <property name="AUTO_LIB_ROOT" value="${FLEX_HOME}/frameworks/libs"/>
+    <property name="MAIN_SOURCE_FILE" value="${SRC_ROOT}/${APP_NAME}.mxml"/>
+    <property name="APP_DESCRIPTOR" value="${SRC_ROOT}/${APP_NAME}-app.xml"/>
+    <property name="DEPLOY_DIR" value="${basedir}/deploy"/>
+    <property name="REPORT_DIR" value="${basedir}/report"/>
+    <property name="AIR_NAME" value="${APP_NAME}.air"/>
     
-	<property name="DEPLOY_DIR" value="${basedir}/deploy"/>
-	<property name="REPORT_DIR" value="${basedir}/report"/>
-	
-	<property name="AIR_NAME" value="${APP_NAME}.air"/>
-	
-	<!-- Location of the Monkey ant tasks -->
-	<path id="libraries">
-	   <fileset dir="${basedir}/libs">
-	      <include name="**/*.jar"/>
-	   </fileset>
-	</path>
-	
-	<!-- FlexUnit ant task -->
-        <taskdef resource="flexUnitTasks.tasks"
-                classpathref="libraries" /> 
+ <!-- set path to Flashplayer logfile -->
+    <condition property="FLASHPLAYER_LOG_DIR" value="${user.home}\Application Data\Macromedia\Flash Player\Logs">  
+        <os family="windows"/>
+    </condition>
+    <condition property="FLASHPLAYER_LOG_DIR" value="${user.home}/Library/Preferences/Macromedia/Flash Player/Logs">  		<os family="mac"/>
+    </condition>
+    <condition property="FLASHPLAYER_LOG_DIR" value="${user.home}/.macromedia/Flash_Player/Logs">  
+        <os family="unix"/>
+    </condition>
+    <property name="FLASHPLAYER_LOG_FILE" value="${FLASHPLAYER_LOG_DIR}/flashlog.txt"/> 
 
-	<target name="compile_app" depends="init">
-	    <!-- adl requires the app descriptor and the .swf file to reside in the same folder -->
-	    <copy file="${APP_DESCRIPTOR}" todir="${DEPLOY_DIR}"/>
+<!-- Location of the Monkey ant tasks -->
+    <path id="libraries">
+        <fileset dir="${LIB_ROOT}/flexunit4.xSDK">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
 
-	    <java jar="${MXMLC.JAR}" fork="true" failonerror="true">
+<!-- FlexUnit ant task -->
+    <taskdef resource="flexUnitTasks.tasks" classpathref="libraries" /> 
 
-		<jvmarg value="-Xmx512m"/> <!-- avoid running out of heap space during compile -->
-                <arg value="-debug=true"/> 
-                <arg value="+flexlib=${FLEX_HOME}/frameworks"/>
-                <arg value="+configname=air"/>
+    <target name="compile_app" depends="init">
+        <!-- adl requires the app descriptor and the .swf file to reside in the same folder -->
+        <copy file="${APP_DESCRIPTOR}" todir="${DEPLOY_DIR}"/>
 
-                <arg value="-source-path"/>
-                <arg value="${SRC_ROOT}"/>
-                <arg value="${TEST_SRC_ROOT}"/>
+        <java jar="${MXMLC.JAR}" fork="true" failonerror="true">
 
-	        <arg value="-file-specs=${MAIN_SOURCE_FILE}"/>
+            <jvmarg value="-Xmx512m"/> <!-- avoid running out of heap space during compile -->
+            <arg value="-debug=true"/> 
+            <arg value="+flexlib=${FLEX_HOME}/frameworks"/>
+            <arg value="+configname=air"/>
 
-                <arg value="-includes"/>
-                <arg value="FlexMonkeyTestController"/>
+            <arg value="-source-path"/>
+            <arg value="${SRC_ROOT}"/>
+            <arg value="${TEST_SRC_ROOT}"/>
 
-                <arg value="-define+=FLEXMONKEY::antRun,true"/>
-                <arg value="-define+=FLEXMONKEY::snapshotDirectory,'file://${basedir}/deploy/snapshots'" /> 
+            <arg value="-file-specs=${MAIN_SOURCE_FILE}"/>
 
-		<arg value="-include-libraries+=${LIB_ROOT}/automation_monkey4.x.swc"/>
-<!--
+            <arg value="-includes"/>
+            <arg value="FlexMonkeyTestController"/>
+
+            <arg value="-define+=FLEXMONKEY::antRun,true"/>
+            <arg value="-define+=FLEXMONKEY::snapshotDirectory,'file://${basedir}/deploy/snapshots'" /> 
+
+            <arg value="-include-libraries+=${LIB_ROOT}/automation_monkey4.x.swc"/>
+            <!--
 		<arg value="-include-libraries+=${AUTO_LIB_ROOT}/automation/automation_spark.swc"/>
 		<arg value="-include-libraries+=${AUTO_LIB_ROOT}/automation/automation.swc"/>
 		<arg value="-include-libraries+=${AUTO_LIB_ROOT}/automation/automation_agent.swc"/>
@@ -79,62 +74,61 @@
 		<arg value="-include-libraries+=${AUTO_LIB_ROOT}/automation/automation_airspark.swc"/>
 		<arg value="-include-libraries+=${AUTO_LIB_ROOT}/datavisualization.swc"/> 
 -->
+            <arg value="-output=${DEPLOY_DIR}/${APP_NAME}.swf"/>
+        </java>
+    </target>
 
-		<arg value="-output=${DEPLOY_DIR}/${APP_NAME}.swf"/>
-	    </java>
-	</target>
-	
-	<target name="run_tests" depends="execute_tests, check_flash_log, show_flash_log">
-	</target>
-	
-	<target name="execute_tests" depends="compile_app">
-		<copy todir="${DEPLOY_DIR}/${SNAPSHOT_DIR}">
-    			<fileset dir="${SNAPSHOT_DIR}"/>
-  		</copy>
+    <target name="run_tests" depends="execute_tests, check_flash_log, show_flash_log">
+    </target>
 
-                <flexunit player="air"
+    <target name="execute_tests" depends="compile_app">
+        <copy todir="${DEPLOY_DIR}/${SNAPSHOT_DIR}">
+            <fileset dir="${SNAPSHOT_DIR}"/>
+        </copy>
+
+        <flexunit player="air"
                         precompiledAppDescriptor="${DEPLOY_DIR}/${APP_NAME}-app.xml"
                         toDir="${REPORT_DIR}"
                         haltonfailure="false"
                         verbose="true" />
 
-		<junitreport todir="${REPORT_DIR}">
-			<fileset dir="${REPORT_DIR}">
-				<include name="TEST-*.xml"/>
-			</fileset>	
-			<report format="frames" todir="${REPORT_DIR}/html"/>
-		</junitreport>				
+        <junitreport todir="${REPORT_DIR}">
+            <fileset dir="${REPORT_DIR}">
+                <include name="TEST-*.xml"/>
+            </fileset>	
+            <report format="frames" todir="${REPORT_DIR}/html"/>
+        </junitreport>				
 
-	</target>
-	
-	<!--  capture the Flash log file -->
-	<target name="show_flash_log" if="${FLASHPLAYER_LOG_FILE_EXISTS}" >
-		<echo>*************** begin Flash Player Log File output *************</echo>
-		<concat><fileset file="${FLASHPLAYER_LOG_FILE}"/></concat>
-		<echo>***************  end  Flash Player Log File output *************</echo>
-	</target>
+    </target>
 
-	<target name="check_flash_log">
-		<available file="${FLASHPLAYER_LOG_FILE}" property="FLASHPLAYER_LOG_FILE_EXISTS"/>
-	</target>
+<!--  capture the Flash log file -->
+    <target name="show_flash_log" if="${FLASHPLAYER_LOG_FILE_EXISTS}" >
+        <echo>*************** begin Flash Player Log File output *************</echo>
+        <concat><fileset file="${FLASHPLAYER_LOG_FILE}"/></concat>
+        <echo>***************  end  Flash Player Log File output *************</echo>
+    </target>
 
-	<!-- Housekeeping -->	
-	<target name="init">
-		<delete dir="${DEPLOY_DIR}" />
-		<delete dir="${REPORT_DIR}" />
-		<mkdir dir="${DEPLOY_DIR}" />		
-		<mkdir dir="${REPORT_DIR}" />		
-	</target>
-		
-	<target name="clean">
-		<delete dir="${DEPLOY_DIR}" />
-		<delete dir="${REPORT_DIR}" />
-		<delete file="${DEPLOY_DIR}/${APP_NAME}.swf"/>
-		<delete file="${DEPLOY_DIR}/${APP_NAME}-app.xml"/>
-	</target>
-	
-	<target name="clobber" depends="clean">
-		<delete file="${DEPLOY_DIR}/${AIR_NAME}"/>
-	</target>
+    <target name="check_flash_log">
+        <available file="${FLASHPLAYER_LOG_FILE}" property="FLASHPLAYER_LOG_FILE_EXISTS"/>
+    </target>
+
+<!-- Housekeeping -->	
+    <target name="init">
+        <delete dir="${DEPLOY_DIR}" />
+        <delete dir="${REPORT_DIR}" />
+        <mkdir dir="${DEPLOY_DIR}" />		
+        <mkdir dir="${REPORT_DIR}" />		
+    </target>
+
+    <target name="clean">
+        <delete dir="${DEPLOY_DIR}" />
+        <delete dir="${REPORT_DIR}" />
+        <delete file="${DEPLOY_DIR}/${APP_NAME}.swf"/>
+        <delete file="${DEPLOY_DIR}/${APP_NAME}-app.xml"/>
+    </target>
+
+    <target name="clobber" depends="clean">
+        <delete file="${DEPLOY_DIR}/${AIR_NAME}"/>
+    </target>
 
 </project>
