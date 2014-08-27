@@ -8,7 +8,7 @@
                 verticalScrollPolicy="off"
                 backgroundAlpha="1"
                 title="{titleText}"
-                creationComplete="creationCompleteHandler()"
+                creationComplete="creationCompleteHandler();"
                 styleName="IntroDialog">
 
     <mx:Script>
@@ -24,7 +24,7 @@
                 var appDescriptor:XML = NativeApplication.nativeApplication.applicationDescriptor;
                 var ns:Namespace = appDescriptor.namespace();
                 var appCopyright:String = appDescriptor.ns::copyright;
-                var appVersion:String = appDescriptor.ns::version;
+                var appVersion:String = appDescriptor.ns::versionNumber;
 
                 versionText.text = "FlexMonkey " + appVersion;
 

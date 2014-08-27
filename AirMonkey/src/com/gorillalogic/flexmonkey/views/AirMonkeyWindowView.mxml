@@ -120,18 +120,18 @@
 
                     appMenu = rootMenu.getItemAt(0).submenu;
                     fileMenu = rootMenu.getItemAt(1).submenu;
-                    editMenu = rootMenu.getItemAt(2).submenu;
-                    windowMenu = rootMenu.getItemAt(3).submenu;
+                    //editMenu = rootMenu.getItemAt(2).submenu;
+                    windowMenu = rootMenu.getItemAt(2).submenu;
                     projectMenu = new NativeMenu();
-                    rootMenu.addSubmenuAt(projectMenu, 3, "Project");
+                    rootMenu.addSubmenuAt(projectMenu, 2, "Project");
                 } else {
                     rootMenu = new NativeMenu();
                     this.nativeWindow.menu = rootMenu;
 
                     fileMenu = new NativeMenu();
                     rootMenu.addSubmenu(fileMenu, "File");
-                    editMenu = new NativeMenu();
-                    rootMenu.addSubmenu(editMenu, "Edit");
+                    //editMenu = new NativeMenu();
+                    //rootMenu.addSubmenu(editMenu, "Edit");
                     projectMenu = new NativeMenu();
                     rootMenu.addSubmenu(projectMenu, "Project");
 
@@ -143,11 +143,12 @@
                 helpMenu = new NativeMenu();
                 rootMenu.addSubmenu(helpMenu, "Help");
 
-                // edit menu ------------------------------------------------------------
-
+                /* edit menu ------------------------------------------------------------
+				
                 if (NativeApplication.supportsMenu) {
                     editMenu.addItemAt((new NativeMenuItem("", true)), 2);
                 }
+				*/
 
                 // file menu ------------------------------------------------------------
                 fileMenu.removeAllItems();
