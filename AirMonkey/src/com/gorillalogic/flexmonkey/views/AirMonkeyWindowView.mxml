@@ -170,8 +170,10 @@
                 var saveTestFileAsAS3Command:NativeMenuItem = new NativeMenuItem("Generate FlexUnit Tests", false);
                 saveTestFileAsAS3Command.addEventListener(Event.SELECT, saveTestFileAsAS3SelectHandler);
 
+				/*
 				var saveTestFileAsJSCommand:NativeMenuItem = new NativeMenuItem("Generate JavaScript Tests", false);
 				saveTestFileAsJSCommand.addEventListener(Event.SELECT, saveTestFileAsJSelectHandler);
+				*/
 				
                 fileMenu.addItem(newProjectCommand)
                 fileMenu.addItem(openProjectCommand)
@@ -182,7 +184,7 @@
                 fileMenu.addItem(logFileCommand);
                 fileMenu.addItem((new NativeMenuItem("", true)));
                 fileMenu.addItem(saveTestFileAsAS3Command);
-				fileMenu.addItem(saveTestFileAsJSCommand);
+				//fileMenu.addItem(saveTestFileAsJSCommand);
 
                 if (!NativeApplication.supportsMenu) {
                     var exitCommand:NativeMenuItem = new NativeMenuItem("Exit", false);
@@ -260,9 +262,11 @@
             private function saveTestFileAsAS3SelectHandler(event:Event):void {
                 FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.GENERATE_AS3_FLEXUNIT_TESTS));
             }
+			/*
 			private function saveTestFileAsJSelectHandler(event:Event):void {
 				FMHub.instance.dispatchEvent(new ProjectFilesEvent(ProjectFilesEvent.GENERATE_JS_TESTS));
 			}
+			*/
 			
             private function exitSelectHandler(event:Event):void {
                 FMHub.instance.dispatchEvent(new ApplicationEvent(ApplicationEvent.MONKEY_EXIT));

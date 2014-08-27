@@ -40,8 +40,10 @@ package com.gorillalogic.flexmonkey.controllers {
         public function register(hub:FMHub):void {
             // code gen
             hub.listen(ProjectFilesEvent.GENERATE_AS3_FLEXUNIT_TESTS, saveTestFilesAsAS3, this);
-			hub.listen(ProjectFilesEvent.GENERATE_JS_TESTS, saveTestFilesAsJS, this);
+			//hub.listen(ProjectFilesEvent.GENERATE_JS_TESTS, saveTestFilesAsJS, this);
         }
+		
+		/*
         private function saveTestFilesAsJS(event:Event):void{
 			FMHub.instance.dispatchEvent(new FMAlertEvent(
 				FMAlertEvent.Alert,
@@ -50,6 +52,8 @@ package com.gorillalogic.flexmonkey.controllers {
 				false
 			));
 		}
+		*/
+		
         private function saveTestFilesAsAS3(event:Event):void {
             var as3Files:AS3FileCollector = new AS3FileCollector(model.generatedCodeSuitesPackageName);
             testAS3Convertor.generateAS3(model.suites, as3Files);
