@@ -3,6 +3,8 @@
 	<name>TomSwftie1</name>
 	<comment></comment>
 	<projects>
+		<project>FlexAutomationLibrary4</project>
+		<project>MonkeyLink</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

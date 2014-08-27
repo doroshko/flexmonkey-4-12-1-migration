@@ -63,7 +63,7 @@ package testSuites.newTestSuite.testCases.tests{
             arr.addItem(theRunnable);
 
         }
-		[Test(async, timeout=12000)]
+		[Test(async, timeout=120000)]
         public function newTestTest():void {
         	this.monkeyTestCaseName = "NewTest";
         	this.monkeyTestName = "newTestTest";

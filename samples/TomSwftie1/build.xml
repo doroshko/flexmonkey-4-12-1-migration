@@ -1,120 +1,117 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <project name="flexmonkey_test" default="build-test" basedir=".">
 
-	<property environment="env"/>
+<!-- Load Environment specific properties from properties file -->
+    <property environment="env"/>
+    <property file="build.properties"/>
+    <fail unless="flex.home" message="flex.home should be set (in build.properties file)"/>	
+    <fail unless="main" message="main should be set (in build.properties file)"/>	
 
-	<!-- Load Environment specific properties from properties file -->
-	<property file="build.properties"/>
-	<fail unless="flex.home" message="flex.home should be set (in build.properties file)"/>	
-	<property name="FLEX_HOME" value="${flex.home}"/>
+    <condition property="src.dir" value="src">
+        <not><isset property="src.dir" /></not>
+    </condition>
 
-	<fail unless="main" message="main should be set (in build.properties file)"/>	
-	
-	<condition property="src.dir" value="src">
-	    <not><isset property="src.dir" /></not>
-	</condition>
+    <condition property="test.src.dir" value="tests/src">
+        <not><isset property="test.src.dir" /></not>
+    </condition>
 
-	<condition property="test.src.dir" value="tests/src">
-	    <not><isset property="test.src.dir" /></not>
-	</condition>
-	
-	<condition property="test" value="TestModule">
-	    <not><isset property="test" /></not>
-	</condition>			
-				
-	<condition property="build.dir" value="${basedir}/bin-debug">
-		    <not><isset property="build.dir" /></not>
-	</condition>
-	
-	<condition property="close.browser" value="true">
-		    <not><isset property="close.browser" /></not>
-	</condition>	
-	
-	<property name="docs.dir" value="docs"/>
-	<property name="lib.dir" value="libs"/>
-	<property name="swc.dir" value="libs"/>
-	<property name="report.dir" value="report"/>	
-	<property name="flex.ant.loc" value="${flex.home}/ant"/>
-	<property name="monkey.snapshots.dir" value="${test.src.dir}/snapshots"/>
+    <condition property="test" value="TestModule">
+        <not><isset property="test" /></not>
+    </condition>			
 
-	<property name="launcher.url" value="file://${build.dir}/${main}.html" />
+    <condition property="build.dir" value="${basedir}/bin-debug">
+        <not><isset property="build.dir" /></not>
+    </condition>
 
-	<property name="DEFAULT.LOCAL" value="en_US"/>
-	<property name="ENCODING" value="UTF-8"/>
+    <condition property="close.browser" value="true">
+        <not><isset property="close.browser" /></not>
+    </condition>	
 
-	<!-- set path to Flashplayer logfile -->
-	<condition property="FLASHPLAYER_LOG_DIR" value="${user.home}\Application Data\Macromedia\Flash Player\Logs">  
-   		<os family="windows"/>
-	</condition>
-	<condition property="FLASHPLAYER_LOG_DIR" value="${user.home}/Library/Preferences/Macromedia/Flash Player/Logs">  
-   		<os family="mac"/>
-	</condition>
-	<condition property="FLASHPLAYER_LOG_DIR" value="${user.home}/.macromedia/Flash_Player/Logs">  
-   		<os family="unix"/>
-	</condition>
-	<property name="FLASHPLAYER_LOG_FILE" value="${FLASHPLAYER_LOG_DIR}/flashlog.txt"/>
-	<available file="${FLASHPLAYER_LOG_FILE}" property="FLASHPLAYER_LOG_FILE_AVAILABLE"/>	
-	
-	<!-- snapshot directory management -->
-	<property name="snapshot.testrun.dir" value="${build.dir}/snapshots"/>
-	<property name="snapshot.source.dir" value="${monkey.snapshots.dir}"/>
+<!-- build variables -->
 
-        <!-- Load the flex tasks for compiling the actionScript code and running flexUnit -->
-        <taskdef resource="flexTasks.tasks" classpath="${flex.ant.loc}/lib/flexTasks.jar"/>
+    <property name="FLEX_HOME" value="${flex.home}"/>
+    <property name="docs.dir" value="docs"/>
+    <property name="lib.dir" value="./../../libs"/>
+    <property name="swc.dir" value="./../../libs"/>
+    <property name="report.dir" value="report"/>	
+    <property name="flex.ant.loc" value="${flex.home}/ant"/>
+    <property name="monkey.snapshots.dir" value="${test.src.dir}/snapshots"/>
+    <property name="snapshot.testrun.dir" value="${build.dir}/snapshots"/>
+    <property name="snapshot.source.dir" value="${monkey.snapshots.dir}"/>
+    <property name="launcher.url" value="file://${build.dir}/${main}.html" />
+    <property name="DEFAULT.LOCAL" value="en_US"/>
+    <property name="ENCODING" value="UTF-8"/>
 
-	<!-- Location of the Monkey ant tasks -->
-	<path id="libraries">
-	   <fileset dir="${lib.dir}">
-	      <include name="**/*.jar"/>
-	   </fileset>
-	</path>
+<!-- set path to Flashplayer logfile -->
+    <condition property="FLASHPLAYER_LOG_DIR" value="${user.home}\Application Data\Macromedia\Flash Player\Logs">  
+        <os family="windows"/>
+    </condition>
+    <condition property="FLASHPLAYER_LOG_DIR" value="${user.home}/Library/Preferences/Macromedia/Flash Player/Logs">  
+        <os family="mac"/>
+    </condition>
+    <condition property="FLASHPLAYER_LOG_DIR" value="${user.home}/.macromedia/Flash_Player/Logs">  
+        <os family="unix"/>
+    </condition>
+    <property name="FLASHPLAYER_LOG_FILE" value="${FLASHPLAYER_LOG_DIR}/flashlog.txt"/>
+    <available file="${FLASHPLAYER_LOG_FILE}" property="FLASHPLAYER_LOG_FILE_AVAILABLE"/>	
 
-	<!-- FlexUnit ant task -->
-        <taskdef resource="flexUnitTasks.tasks"
+
+<!-- Load the flex tasks for compiling the actionScript code and running flexUnit -->
+    <taskdef resource="flexTasks.tasks" classpath="${flex.ant.loc}/lib/flexTasks.jar"/>
+
+<!-- Location of the Monkey ant tasks -->
+    <path id="libraries">
+        <fileset dir="${lib.dir}/flexunit4.xSDK">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+<!-- FlexUnit ant task -->
+    <taskdef resource="flexUnitTasks.tasks"
                 classpathref="libraries" />
 
-	<!-- setup kill script properties -->
-        <condition property="isUnix">
-                <os family="unix" />
-        </condition> 
+<!-- setup kill script properties -->
+    <condition property="isUnix">
+        <os family="unix" />
+    </condition> 
 
-        <condition property="KILL_SCRIPT" value="${basedir}/bin/kill.sh" else="">
-                <os family="unix"/>
-        </condition> 
-	
- 	<!-- Compile Flex files -->
-	<target name="clean">
-		<delete dir="${snapshot.testrun.dir}"/>
-	</target>
-	
+    <condition property="KILL_SCRIPT" value="${basedir}/bin/kill.sh" else="">
+        <os family="unix"/>
+    </condition> 
 
-	<target name="compileApplicationUnderTest" description="Compile the application with the test runner linked in">
-            <java jar="${FLEX_HOME}/lib/mxmlc.jar" fork="true" failonerror="true">
-                <jvmarg value="-Xmx512m"/> <!-- avoid running out of heap space during compile -->
-                <arg value="-debug=true"/>
+<!-- Compile Flex files -->
+    <target name="clean">
+        <delete dir="${snapshot.testrun.dir}"/>
+    </target>
 
-                <arg value="+flexlib=${FLEX_HOME}/frameworks"/>
 
-                <arg value="-source-path"/>
-                <arg value="${src.dir}"/>
-                <arg value="${test.src.dir}"/>
+    <target name="compileApplicationUnderTest" description="Compile the application with the test runner linked in">
+        <java jar="${FLEX_HOME}/lib/mxmlc.jar" fork="true" failonerror="true">
+            <jvmarg value="-Xmx512m"/> <!-- avoid running out of heap space during compile -->
+            <arg value="-debug=true"/>
 
-                <arg value="-file-specs=${src.dir}/${main}.mxml"/>
+            <arg value="+flexlib=${FLEX_HOME}/frameworks"/>
 
-                <arg value="-includes"/>
-                <arg value="FlexMonkeyTestController"/>
+            <arg value="-source-path"/>
+            <arg value="${src.dir}"/>
+            <arg value="${test.src.dir}"/>
 
-                <arg value="-include-libraries+=${swc.dir}/automation_monkey4.x.swc"/>
-                <arg value="-include-libraries+=${swc.dir}/flexunit-aircilistener-4.1.0_RC2-4-4.1.0.16076.swc"/>
-                <arg value="-include-libraries+=${swc.dir}/flexunit-4.1.0_RC2-4-flex_4.1.0.16076.swc"/>
-                <arg value="-include-libraries+=${swc.dir}/flexunit-cilistener-4.1.0_RC2-4-4.1.0.16076.swc"/>
+            <arg value="-file-specs=${src.dir}/${main}.mxml"/>
 
-                <arg value="-output=${build.dir}/${main}.swf"/>
-            </java>
-	</target>
-	
-	<target name="wrapper">	
-		<html-wrapper
+            <arg value="-includes"/>
+            <arg value="FlexMonkeyTestController"/>
+
+            <arg value="-include-libraries+=${swc.dir}/automation_monkey4.x.swc"/>
+            <arg value="-include-libraries+=${swc.dir}/flexunit4.xSDK/flexunit-aircilistener-4.1.0_RC2-4-4.1.0.16076.swc"/>
+            <arg value="-include-libraries+=${swc.dir}/flexunit4.xSDK/flexunit-4.1.0_RC2-4-flex_4.1.0.16076.swc"/>
+            <arg value="-include-libraries+=${swc.dir}/flexunit4.xSDK/flexunit-cilistener-4.1.0_RC2-4-4.1.0.16076.swc"/>
+
+            <arg value="-output=${build.dir}/${main}.swf"/>
+        </java>
+    </target>
+
+    <target name="wrapper">	
+        <html-wrapper
 	        title="FlexMonkey Testing"
 	        file="${main}.html"
 	        height="100%"
@@ -127,62 +124,59 @@
 	        version-revision="0"
 	        history="false"
 	        output="${build.dir}"/>
-	</target>	
+    </target>	
 
-	<!-- Run the Tests -->
-	<target name="cleanReport" depends="wrapper">
+<!-- Run the Tests -->
+    <target name="cleanReport" depends="wrapper">
         <delete dir="${report.dir}" />
     </target>
 
-	<target name="checkSnapshots">
-		<available file="${snapshot.source.dir}" property="snapshots.present"/>
-<echo message="snapshot.source.dir=${snapshot.source.dir} snapshots.present=${snapshots.present}"/>
-	</target>
+    <target name="checkSnapshots">
+        <available file="${snapshot.source.dir}" property="snapshots.present"/>
+        <echo message="snapshot.source.dir=${snapshot.source.dir} snapshots.present=${snapshots.present}"/>
+    </target>
 
-	<target name="copySnapshots" depends="checkSnapshots" if="snapshots.present">
-		<copy todir="${snapshot.testrun.dir}" overwrite="true">
-			<fileset dir="${snapshot.source.dir}"/>
-		</copy>
-	</target>
+    <target name="copySnapshots" depends="checkSnapshots" if="snapshots.present">
+        <copy todir="${snapshot.testrun.dir}" overwrite="true">
+            <fileset dir="${snapshot.source.dir}"/>
+        </copy>
+    </target>
 
-	<target name="initTest" depends="cleanReport,copySnapshots">
-		<copy todir="${build.dir}" overwrite="true">
-			<fileset file="html-template/QuoteOMatic.swf"/>
-		</copy>
-		<mkdir dir="${report.dir}" />
-	</target>
+    <target name="initTest" depends="cleanReport,copySnapshots">
+        <mkdir dir="${report.dir}" />
+    </target>
 
-	<target name="test" depends="execute_test, check_flash_log, show_flash_log"/>
-	
-	<target name="execute_test" depends="initTest">       
-		<echo>${build.dir}/${main}.swf</echo>
-		<flexunit 
+    <target name="test" depends="execute_test, check_flash_log, show_flash_log"/>
+
+    <target name="execute_test" depends="initTest">       
+        <echo>${build.dir}/${main}.swf</echo>
+        <flexunit 
 			url="file://${build.dir}/${main}.swf"
 			command="${monkey.launch.app}"
                         toDir="${report.dir}"
                         haltonfailure="false"
                         verbose="true" />
 
-	    	<junitreport todir="${report.dir}">
-			<fileset dir="${report.dir}">
-	        		<include name="TEST-*.xml"/>
-			</fileset>	
-			<report format="frames" todir="${report.dir}/html"/>
-	    	</junitreport>				
-	</target>
-	
-	<!--  capture the Flash log file -->
-	<target name="show_flash_log" if="${FLASHPLAYER_LOG_FILE_EXISTS}" >
-		<echo>*************** begin Flash Player Log File output *************</echo>
-		<concat><fileset file="${FLASHPLAYER_LOG_FILE}"/></concat>
-		<echo>***************  end  Flash Player Log File output *************</echo>
-	</target>
+        <junitreport todir="${report.dir}">
+            <fileset dir="${report.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>	
+            <report format="frames" todir="${report.dir}/html"/>
+        </junitreport>				
+    </target>
 
-	<target name="check_flash_log">
-		<available file="${FLASHPLAYER_LOG_FILE}" property="FLASHPLAYER_LOG_FILE_EXISTS"/>
-	</target>
-	
-	<target name="build" depends="compileApplicationUnderTest"/>		
-	<target name="clean-build-test" depends="clean,build,test"/>		
-	<target name="build-test" depends="build,test"/>			
+<!--  capture the Flash log file -->
+    <target name="show_flash_log" if="${FLASHPLAYER_LOG_FILE_EXISTS}" >
+        <echo>*************** begin Flash Player Log File output *************</echo>
+        <concat><fileset file="${FLASHPLAYER_LOG_FILE}"/></concat>
+        <echo>***************  end  Flash Player Log File output *************</echo>
+    </target>
+
+    <target name="check_flash_log">
+        <available file="${FLASHPLAYER_LOG_FILE}" property="FLASHPLAYER_LOG_FILE_EXISTS"/>
+    </target>
+
+    <target name="build" depends="compileApplicationUnderTest"/>		
+    <target name="clean-build-test" depends="clean,build,test"/>		
+    <target name="build-test" depends="build,test"/>			
 </project>
