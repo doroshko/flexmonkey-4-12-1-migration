@@ -29,14 +29,6 @@
 							precision="0"
 							rounding="nearest"/>
 	</fx:Declarations>
-	<fx:Style>
-		@namespace "library://ns.adobe.com/flex/spark";
-		
-		RadioButton{ 
-			baseColor: #FFFFFF; 
-		}
-		
-	</fx:Style>
 	
 	<!-- Note: A custom panel skin is used for the Tour de Flex samples and is included in the
 	source tabs for each sample.    -->

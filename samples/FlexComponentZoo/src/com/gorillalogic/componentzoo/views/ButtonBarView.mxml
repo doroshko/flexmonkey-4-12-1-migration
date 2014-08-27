@@ -3,22 +3,6 @@
 			   xmlns:s="library://ns.adobe.com/flex/spark" 
 			   xmlns:mx="library://ns.adobe.com/flex/mx">
 	
-	<fx:Style>
-		@namespace "library://ns.adobe.com/flex/spark";
-		
-		ButtonBar ToggleButton:upAndSelected,
-		ButtonBar ToggleButton:overAndSelected,
-		ButtonBar ToggleButton:downAndSelected,
-		ButtonBar ToggleButton:disabledAndSelected {
-			baseColor: #FFFFFF;
-			color: #323232;
-		}
-		ButtonBar {
-			baseColor: #000000;
-			color: #FFFFFF;
-		}
-	</fx:Style>
-	
 	<fx:Script>
 		<![CDATA[
 			import spark.events.IndexChangeEvent;

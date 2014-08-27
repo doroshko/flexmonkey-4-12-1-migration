@@ -23,35 +23,7 @@
 			}
 		]]>
 	</fx:Script>
-	<fx:Style>
-		@namespace "library://ns.adobe.com/flex/spark";
-		
-		ToggleButton:upAndSelected,
-		ToggleButton:overAndSelected {
-			baseColor: #000000;
-			color: #FFFFFF;
-		}
-		ToggleButton:downAndSelected {
-			baseColor: #336699;
-			color: #FFFFFF;
-		}
-		ToggleButton:disabledAndSelected {
-			baseColor: #E2E2E2;
-			color: #212799;
-		}
-		ToggleButton:up {
-			baseColor: #C0C0C0;
-			color: #323232;
-		}
-		ToggleButton:over {
-			baseColor: #FFFFFF;
-			color: #000000;
-		}
-		ToggleButton:down {
-			baseColor: #014f9f;
-			color: #FFFFFF;
-		}
-	</fx:Style>
+	
 	<s:states> 
 		<s:State name="show"/>    
 		<s:State name="hide"/> 

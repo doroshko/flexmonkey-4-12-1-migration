@@ -30,8 +30,6 @@
 					</s:dataProvider> 
 				</s:DataGroup> 
 				<s:VScrollBar viewport="{vertView}" 
-							  top="10" 
-							  left="{vertView.x + vertView.width + 10}" 
 							  height="{vertView.height}"/>
 			</s:HGroup>
 		</mx:Box> 
@@ -56,8 +54,6 @@
 				
 			</s:HGroup>
 			<s:HScrollBar viewport="{horizView}" 
-						  left="{horizView.left}" 
-						  bottom="{horizView.bottom}" 
 						  width ="{horizView.width}"/>
 		</mx:Box>
 		

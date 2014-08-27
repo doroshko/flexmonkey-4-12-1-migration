@@ -2,6 +2,53 @@
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
 			   xmlns:s="library://ns.adobe.com/flex/spark" 
 			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600" xmlns:views="com.gorillalogic.componentzoo.views.*">
+	<fx:Style>
+		@namespace "library://ns.adobe.com/flex/spark";
+		
+		ButtonBar ToggleButton:upAndSelected,
+		ButtonBar ToggleButton:overAndSelected,
+		ButtonBar ToggleButton:downAndSelected,
+		ButtonBar ToggleButton:disabledAndSelected {
+			baseColor: #FFFFFF;
+			color: #323232;
+		}
+		ButtonBar {
+			baseColor: #000000;
+			color: #FFFFFF;
+		}
+
+		RadioButton { 
+			baseColor: #FFFFFF; 
+		}
+		
+		ToggleButton:upAndSelected,
+		ToggleButton:overAndSelected {
+			baseColor: #000000;
+			color: #FFFFFF;
+		}
+		ToggleButton:downAndSelected {
+			baseColor: #336699;
+			color: #FFFFFF;
+		}
+		ToggleButton:disabledAndSelected {
+			baseColor: #E2E2E2;
+			color: #212799;
+		}
+		ToggleButton:up {
+			baseColor: #C0C0C0;
+			color: #323232;
+		}
+		ToggleButton:over {
+			baseColor: #FFFFFF;
+			color: #000000;
+		}
+		ToggleButton:down {
+			baseColor: #014f9f;
+			color: #FFFFFF;
+		}
+
+	</fx:Style>
+	
 	<fx:Script>
 		<![CDATA[
 			import mx.core.INavigatorContent;
