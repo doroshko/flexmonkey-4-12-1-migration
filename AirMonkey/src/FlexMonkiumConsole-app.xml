@@ -18,7 +18,7 @@
 	-->
 	<id>FlexMonkiumConsole</id>
 
-    <versionNumber>5.1.1</versionNumber>
+    <versionNumber>5.2</versionNumber>
 	<!-- Used as the filename for the application. Required. -->
 	<filename>FlexMonkiumConsole</filename>
 

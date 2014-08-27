@@ -7,7 +7,7 @@ package com.gorillalogic.utils {
     public class FMLibraryVersionUtil {
 
         public static function get libraryVersion():String {
-            return "5.1.3";
+            return "5.2";
         }
 
     }
