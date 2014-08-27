@@ -4,9 +4,9 @@
     <compilerSourcePath/>
     <libraryPath defaultLinkType="1">
       <libraryPathEntry kind="4" path=""/>
-      <libraryPathEntry kind="1" linkType="1" path="libs"/>
       <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/air/applicationupdater_ui.swc" useDefaultLinkType="false"/>
       <libraryPathEntry kind="3" linkType="1" path="/MonkeyLink/bin/MonkeyLink.swc" useDefaultLinkType="false"/>
+      <libraryPathEntry kind="1" linkType="1" path="/as3gate/bin"/>
     </libraryPath>
     <sourceAttachmentPath/>
   </compiler>
@@ -25,7 +25,7 @@
   <flashCatalyst validateFlashCatalystCompatibility="false"/>
   <buildTargets>
     <buildTarget buildTargetName="default">
-      <airSettings airCertificatePath="/Users/edward/Gorilla/dev/flexmonkey/workspace/GorillaArtifacts/certificates/ThawteCodeSigningCA.p12" airTimestamp="true" anePathSet="false" version="1">
+      <airSettings airCertificatePath="/Users/edward/Gorilla/dev/flexmonkey/workspace/GorillaArtifacts/certificates/ThawteCodeSigningCA.p12" airTimestamp="true" anePathSet="true" version="1">
         <airExcludes/>
         <anePaths/>
       </airSettings>

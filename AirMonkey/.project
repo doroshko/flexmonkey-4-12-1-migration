@@ -4,7 +4,9 @@
 	<comment></comment>
 	<projects>
 		<project>AirMonkeyLibrary</project>
+		<project>as3gate</project>
 		<project>FlexAutomationLibrary4_0_0</project>
+		<project>MonkeyLink</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
