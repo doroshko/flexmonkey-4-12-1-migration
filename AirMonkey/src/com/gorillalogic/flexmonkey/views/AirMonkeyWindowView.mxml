@@ -207,8 +207,7 @@
 
 				var exploreAutomationChildrenCommand:NativeMenuItem = new NativeMenuItem("Explore Automation Children", false);
 				exploreAutomationChildrenCommand.addEventListener(Event.SELECT, exploreAutomationChildrenCurrnetApplication);
-
-				
+			
                 var versionCheckCommand:NativeMenuItem = new NativeMenuItem("Version Check", false);
                 versionCheckCommand.addEventListener(Event.SELECT, versionCheckSelectedHandler);
 
@@ -306,13 +305,13 @@
 
             // help menu select handler
             private function flexMonkeyForumSelectHandler(event:Event):void {
-                var url:String = "http://www.gorillalogic.com/flexmonkey";
+                var url:String = "http://www.cloudmonkeymobile.com/flexmonkey-documentation";
                 var request:URLRequest = new URLRequest(url);
 
                 try {
                     navigateToURL(request);
                 } catch (e:Error) {
-                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "Could not launch FlexMonkey Forum in Browser"));
+                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "Could not launch FlexMonkey help in Browser"));
                 }
             }
 
@@ -322,9 +321,9 @@
 
             private function gorillaButtonHandler(event:MouseEvent):void {
                 try {
-                    navigateToURL(new URLRequest("http://www.gorillalogic.com/flexmonkey"));
+                    navigateToURL(new URLRequest("http://www.cloudmonkeymobile.com/flexmonkey-documentation"));
                 } catch (e:Error) {
-                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "Could not launch http://www.gorillalogic.com/flexmonkey in Browser"));
+                    FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "Could not launch http://www.cloudmonkeymobile.com/flexmonkey-documentation in Browser"));
                 }
             }
 
@@ -493,7 +492,15 @@
             }
 
             protected function watchHowToVideosClickHandler(event:MouseEvent):void {
-                FMHub.instance.dispatchEvent(new Event(ApplicationEvent.OPEN_HOW_TO_VIDEOS));
+                //FMHub.instance.dispatchEvent(new Event(ApplicationEvent.OPEN_HOW_TO_VIDEOS));
+				var url:String = "http://www.jamesward.com/2011/03/02/testing-flex-apps-with-flexmonkey-reloaded/";
+				var request:URLRequest = new URLRequest(url);
+				
+				try {
+					navigateToURL(request);
+				} catch (e:Error) {
+					FMHub.instance.dispatchEvent(new FMAlertEvent(FMAlertEvent.Alert, "Could not launch " + url + " in Browser"));
+				}
             }
 
             //

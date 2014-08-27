@@ -30,7 +30,7 @@
             protected function create():void {
                 hub = FMHub.instance;
 
-                hub.listen(ApplicationEvent.OPEN_HOW_TO_VIDEOS, openHowToVideoHandler, this);
+                //hub.listen(ApplicationEvent.OPEN_HOW_TO_VIDEOS, openHowToVideoHandler, this);
 
                 hub.listen(ProjectFilesEvent.OPEN_PROJECT_PROPERTIES_WINDOW, openProjectPropertiesWindow, this);
                 hub.listen(ApplicationEvent.OPEN_LOG_FILE_VIEW, openProjectLogFile, this);
@@ -93,13 +93,15 @@
                 Alert.show("FlexMonkey " + appVersion);
             }
 
-
+			
+			/*
             private function openHowToVideoHandler(event:Event):void {
                 if (howToVideos.nativeWindow != null && howToVideos.closed) {
                     howToVideos = new HowToVideos();
                 }
                 howToVideos.open();
             }
+			*/
 
             private function openProjectPropertiesWindow(event:Event = null,
                                                          loadedOnStartup:Boolean = false):void {
@@ -214,7 +216,7 @@
         <project:ProjectApplicationAutomationTreeView id="projectApplicationAutomationTreeView"/>
 		<views:RecordWindow id="recordWindowView"/>
         <runner:TestRunnerSnapshotWindow id="testRunnerSnapshotWindow"/>
-        <views:HowToVideos id="howToVideos"/>
+        <!--<views:HowToVideos id="howToVideos"/>-->
     </fx:Declarations>
 
 </s:Group>
