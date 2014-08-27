@@ -57,7 +57,7 @@
 		
 		<!-- The image is the drag initiator. -->
 		<s:Image id="myimg" 
-				 source="@Embed(source='assets/globe.jpg')" 
+				 source="@Embed(source='/assets/globe.jpg')" 
 				 mouseMove="mouseMoveHandler(event);"/> 
 	</mx:Canvas>
 </s:Panel>

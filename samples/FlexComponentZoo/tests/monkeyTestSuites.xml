@@ -1,0 +1,70 @@
+<FlexMonkey>
+  <TestSuite name="FlexMonkey_Flex4_Suite" description="" ignore="false">
+    <TestCase name="TestCases" description="" ignore="false">
+      <Test name="ASetupUp" description="" defaultThinkTime="500" ignore="false">
+        <UIEvent command="Open" value="_FlexComponentZoo_Tree1" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Spark"/>
+        </UIEvent>
+      </Test>
+      <Test name="Button" description="null" defaultThinkTime="500" ignore="false">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Spark>Button"/>
+        </UIEvent>
+        <UIEvent command="Click" value="Standard Button" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false"/>
+        <Verify value="repeatText" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="0" verifyBitmap="false" snapshotURL="" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Standard Button pressed!&#xA;" type="property" actualValue="Standard Button pressed!&#xA;"/>
+        </Verify>
+      </Test>
+      <Test name="ButtonBar" description="null" defaultThinkTime="500" ignore="false">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Spark>ButtonBar"/>
+        </UIEvent>
+        <UIEvent command="Select" value="myButtonBar" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Red"/>
+        </UIEvent>
+        <Verify value="txtColor" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="0" verifyBitmap="false" snapshotURL="" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Red selected!" type="property" actualValue="Red selected!"/>
+        </Verify>
+        <UIEvent command="Select" value="myButtonBar" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Blue"/>
+        </UIEvent>
+        <Verify value="myTextArea" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="0" verifyBitmap="false" snapshotURL="" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Button Bar index clicked = 2&#xA;Button Bar previous index = 0&#xA;Button Bar label clicked = Blue" type="property" actualValue="Button Bar index clicked = 2&#xA;Button Bar previous index = 0&#xA;Button Bar label clicked = Blue"/>
+        </Verify>
+      </Test>
+      <Test name="CheckBox" description="null" defaultThinkTime="500" ignore="false">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Spark>CheckBox"/>
+        </UIEvent>
+        <UIEvent command="Click" value="Lettuce" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false"/>
+        <UIEvent command="Click" value="Mayonnaise" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false"/>
+        <UIEvent command="Click" value="Tomato" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false"/>
+        <Verify value="totalString" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="0" verifyBitmap="false" snapshotURL="" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="$5.25" type="property" actualValue="$5.25"/>
+        </Verify>
+      </Test>
+      <Test name="ComboBox" description="null" defaultThinkTime="500" ignore="false">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Spark>ComboBox"/>
+        </UIEvent>
+        <UIEvent command="Open" value="_ComboBoxView_ComboBox1" prop="id" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="null"/>
+        </UIEvent>
+        <UIEvent command="Select" value="_ComboBoxView_ComboBox1" prop="id" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="American Express"/>
+        </UIEvent>
+        <Verify value="myData" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="0" verifyBitmap="false" snapshotURL="" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Data: 3" type="property" actualValue="Data: 3"/>
+        </Verify>
+      </Test>
+      <Test name="List" description="null" defaultThinkTime="500" ignore="false">
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Spark>List"/>
+        </UIEvent>
+        <UIEvent command="Select" value="_FlexComponentZoo_Tree1" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false">
+          <arg value="Spark>List"/>
+        </UIEvent>
+      </Test>
+    </TestCase>
+  </TestSuite>
+</FlexMonkey>
