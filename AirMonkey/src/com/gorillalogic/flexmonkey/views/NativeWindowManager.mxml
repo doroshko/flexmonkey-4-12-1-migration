@@ -71,6 +71,7 @@
                 }
             }
 
+			/*
             private function displayAlert(alertWindow:Object):void {
                 //check for different target window
                 var launchTarget:UIComponent = _airMonkeyWindow;
@@ -83,6 +84,7 @@
                 //load window
                 PopUpManager.addPopUp(IFlexDisplayObject(alertWindow), launchTarget, true);
             }
+			*/
 
             private function displayAbout():void {
                 var appDescriptor:XML = NativeApplication.nativeApplication.applicationDescriptor;
@@ -197,14 +199,18 @@
                 testRunnerSnapshotWindow.nativeWindow.y = _airMonkeyWindow.nativeWindow.y + 55;
             }
 
-            private function displayAboutView(event:Event):void {
-                var v:AboutView = new AboutView();
-                displayAlert(v);
-            }
+            private function displayAboutView(event:Event):void {	
+				var parentWindow:UIComponent = _airMonkeyWindow;
+				var dialog:AboutView  = new AboutView();
+				dialog.open(UIComponent(parentWindow),true);
+				dialog.center(parentWindow.width,parentWindow.height);
+			}
 
             private function displaySaveWarningVew(event:Event):void {
-                var v:SaveWarningDialogView = new SaveWarningDialogView();
-                displayAlert(v);
+				var parentWindow:UIComponent = _airMonkeyWindow;
+				var dialog:SaveWarningDialogView  = new SaveWarningDialogView();
+				dialog.open(UIComponent(parentWindow),true);
+				dialog.center(parentWindow.width,parentWindow.height);
             }
         ]]>
     </fx:Script>
