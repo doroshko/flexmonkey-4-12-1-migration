@@ -16,9 +16,10 @@ The good old Gorilla Logic UI testing platform for Flex and AIR applications. Ca
     - /samples/FlexComponentZoo
     - /samples/MonkeyContactsExample
     - /samples/TomSwftie1
+    - /samples/say_hello_web
+    - /samples/say_hello_air
 - Projects are configured to use the default SDK.
-- 
 
 ## Versions
 
-- 5.2 was tested with Flash Builder 4.6, Flex SDK 4.6, Flash PLayer 14, Adobe AIR 14 and Firefox. 
+- 5.2.1 was tested with Flash Builder 4.6, Flex SDK 4.6, Flash Payer 14, Adobe AIR 14 and Firefox. 

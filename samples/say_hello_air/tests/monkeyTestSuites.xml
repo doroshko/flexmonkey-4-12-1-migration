@@ -1,0 +1,17 @@
+<FlexMonkey>
+  <TestSuite name="New Test Suite" description="" ignore="false">
+    <TestCase name="New Test Case" description="" ignore="false">
+      <Test name="New Test" description="" defaultThinkTime="250" ignore="false">
+        <UIEvent command="Click" value="Say Hello" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false"/>
+        <Verify value="testText" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="0" verifyBitmap="false" snapshotURL="" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Hello" type="property" actualValue="Hello"/>
+        </Verify>
+        <UIEvent command="Click" value="Clear" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false"/>
+        <UIEvent command="Click" value="Say Hello" prop="automationName" delay="1000" attempts="10" retryOnlyOnResponse="false"/>
+        <Verify value="testText" prop="automationName" description="New Verify" isRetryable="true" delay="500" attempts="0" verifyBitmap="false" snapshotURL="" verifyBitmapFuzziness="0">
+          <Attribute name="text" expectedValue="Hello" type="property" actualValue="Hello"/>
+        </Verify>
+      </Test>
+    </TestCase>
+  </TestSuite>
+</FlexMonkey>
