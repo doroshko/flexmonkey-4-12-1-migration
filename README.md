@@ -23,3 +23,4 @@ The good old Gorilla Logic UI testing platform for Flex and AIR applications. Ca
 ## Versions
 
 - 5.2.1 was tested with Flash Builder 4.6, Flex SDK 4.6, Flash Payer 14, Adobe AIR 14 and Firefox. 
+- 5.3 was Flash Builder 4.6, Flex SDK 4.12.1, Flash Payer 14, Adobe AIR 14 and Firefox. 

@@ -26,7 +26,8 @@ package com.gorillalogic.utils {
             { version: "4.0", filename: "automation_monkey4.x.swc" },
             { version: "4.1", filename: "automation_monkey4.x.swc" },
 			{ version: "4.5", filename: "automation_monkey4.x.swc" },
-			{ version: "4.6", filename: "automation_monkey4.x.swc" }];
+			{ version: "4.6", filename: "automation_monkey4.x.swc" },
+			{ version: "4.12.1", filename: "automation_monkey4.x.swc" }];
 
         public static function get sdkVersions():Array {
             return def;

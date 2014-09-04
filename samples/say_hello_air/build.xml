@@ -1,4 +1,4 @@
-<project name="adobe_air" basedir="." default="run_tests">
+<project name="say_hello_air" basedir="." default="run_tests">
 
     <property name="DEBUG" value="true"/>	
     <property file="build.properties"/> 
@@ -8,7 +8,7 @@
     <property name="FLEX_HOME" value="${flex.home}"/> 
     <property name="MXMLC.JAR" value="${FLEX_HOME}/lib/mxmlc.jar"/>
     <property name="ADT.JAR" value="${AIR_SDK_HOME}/lib/adt.jar"/>
-    <property name="APP_NAME" value="adobe_air"/>
+    <property name="APP_NAME" value="say_hello_air"/>
     <property name="SNAPSHOT_DIR" value="./tests/src/snapshots"/>
     <property name="SRC_ROOT" value="./src"/>
     <property name="TEST_SRC_ROOT" value="./tests/src"/>
@@ -57,7 +57,7 @@
             <arg value="${TEST_SRC_ROOT}"/>
 
             <arg value="-file-specs=${MAIN_SOURCE_FILE}"/>
-
+            
             <arg value="-includes"/>
             <arg value="FlexMonkeyTestController"/>
 
@@ -88,7 +88,7 @@
         </copy>
 
         <flexunit player="air"
-                        swf="${DEPLOY_DIR}/adobe_air.swf"
+                        swf="${DEPLOY_DIR}/say_hello_air.swf"
                         toDir="${REPORT_DIR}"
                         haltonfailure="false"
                         verbose="true" />
